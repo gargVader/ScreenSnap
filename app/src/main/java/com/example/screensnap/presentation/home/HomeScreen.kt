@@ -23,9 +23,8 @@ fun HomeScreen(
     ),
 ) {
 
-    val mediaProjectionLauncher =
+    val mediaProjectionPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { activityResult ->
-
             if (activityResult.resultCode == Activity.RESULT_OK) {
                 viewModel.onEvent(
                     HomeScreenEvents.OnStartRecord(
@@ -40,7 +39,7 @@ fun HomeScreen(
     Text(text = "ScreenSnap")
     Box(modifier = Modifier.fillMaxSize()) {
         RecordFab(modifier = Modifier.align(Alignment.BottomEnd)) {
-            mediaProjectionLauncher.launch(viewModel.getScreenCaptureIntent())
+            mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
         }
     }
 }
