@@ -29,16 +29,17 @@ class HomeViewModel @Inject constructor(
                 val screenRecorderServiceIntent =
                     ScreenRecorderService.createIntent(app, event.resultCode, event.data)
                 app.startForegroundService(screenRecorderServiceIntent)
+                state = state.copy(
+                    isRecording = true
+                )
             }
 
             is HomeScreenEvents.OnStopRecord -> {
-
+                val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
+                app.stopService(screenRecorderServiceIntent)
+                state = state.copy(isRecording = false)
             }
         }
-    }
-
-    private fun startRecord() {
-
     }
 
     fun getScreenCapturePermissionIntent(): Intent {
