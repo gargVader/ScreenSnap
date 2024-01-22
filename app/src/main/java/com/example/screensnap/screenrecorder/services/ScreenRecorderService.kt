@@ -13,6 +13,7 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
@@ -133,6 +134,12 @@ class ScreenRecorderService : Service() {
 
     private fun setupMediaProjection(resultCode: Int, data: Intent) {
         mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
+        mediaProjection?.registerCallback(object : MediaProjection.Callback(){
+            override fun onStop() {
+                super.onStop()
+                // TODO: release resources
+            }
+        }, null)
     }
 
     private fun setupVirtualDisplay() {
