@@ -10,14 +10,12 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.os.Handler
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
+import com.example.screensnap.screenrecorder.ScreenSizeHelper
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
@@ -25,10 +23,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Objects
-import java.util.Timer
-import javax.inject.Inject
-import kotlin.concurrent.timerTask
-import kotlin.math.log
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
@@ -40,12 +34,16 @@ class ScreenRecorderService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var mediaRecorder: MediaRecorder? = null
 
+    private lateinit var screenSizeHelper: ScreenSizeHelper
+
     override fun onCreate() {
         mediaProjectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        screenSizeHelper = ScreenSizeHelper(this)
+
         // Extract info
         val intentExtras: Bundle = intent?.extras!!
         val resultCode = intentExtras.getInt(KEY_RESULT_CODE)
@@ -102,11 +100,11 @@ class ScreenRecorderService : Service() {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setVideoEncodingBitRate(5 * 720 * 1280)
+            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth *  screenSizeHelper.screenHeight)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
             setVideoSize(
-                720,
-                1280
+                screenSizeHelper.screenWidth,
+                screenSizeHelper.screenHeight
             ) //after setVideoSource(), setOutFormat()
             setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
 
@@ -145,7 +143,7 @@ class ScreenRecorderService : Service() {
     private fun setupVirtualDisplay() {
         virtualDisplay = mediaProjection?.createVirtualDisplay(
             "ScreenSnapVirtualDisplay",
-            720, 1280, 1,
+            screenSizeHelper.screenWidth, screenSizeHelper.screenHeight, screenSizeHelper.screenDensity,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
             mediaRecorder?.surface, null, null
         )
