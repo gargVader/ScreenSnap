@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.screensnap.screenrecorder.services.ScreenRecorderService
+import com.example.screensnap.screenrecorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,23 +63,28 @@ class HomeViewModel @Inject constructor(
         loadVideos()
     }
 
-    fun onEvent(event: HomeScreenEvents) {
-        when (event) {
-            is HomeScreenEvents.OnStartRecord -> {
-                val screenRecorderServiceIntent =
-                    ScreenRecorderService.createIntent(app, event.resultCode, event.data)
-                app.startForegroundService(screenRecorderServiceIntent)
-                state = state.copy(
-                    isRecording = true
-                )
-            }
+    fun startRecord(
+        mediaProjectionResultCode: Int,
+        mediaProjectionData: Intent,
+        shouldCaptureMic: Boolean
+    ) {
+        app.startForegroundService(
+            ScreenRecorderServiceConfig(
+                mediaProjectionResultCode = mediaProjectionResultCode,
+                mediaProjectionData = mediaProjectionData,
+                notificationId = 1,
+                shouldCaptureMic = shouldCaptureMic,
+            ).toScreenRecorderServiceIntent(app)
+        )
+        state = state.copy(
+            isRecording = true
+        )
+    }
 
-            is HomeScreenEvents.OnStopRecord -> {
-                val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
-                app.stopService(screenRecorderServiceIntent)
-                state = state.copy(isRecording = false)
-            }
-        }
+    fun stopRecord(){
+        val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
+        app.stopService(screenRecorderServiceIntent)
+        state = state.copy(isRecording = false)
     }
 
     fun getScreenCapturePermissionIntent(): Intent {

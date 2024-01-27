@@ -1,7 +1,11 @@
 package com.example.screensnap.presentation.home
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,11 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.VideoCameraFront
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -36,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.screensnap.presentation.elements.RecordFab
 
@@ -53,14 +56,20 @@ fun HomeScreen(
     val mediaProjectionPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { activityResult ->
             if (activityResult.resultCode == Activity.RESULT_OK) {
-                viewModel.onEvent(
-                    HomeScreenEvents.OnStartRecord(
-                        resultCode = activityResult.resultCode,
-                        data = activityResult.data!!
-                    )
+                viewModel.startRecord(
+                    mediaProjectionResultCode = activityResult.resultCode,
+                    mediaProjectionData = activityResult.data!!,
+                    shouldCaptureMic = selected
                 )
             }
-
+        }
+    val audioPermissionLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                selected = true
+            } else {
+                Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
+            }
         }
 
     Column(
@@ -77,7 +86,24 @@ fun HomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = selected,
-                onClick = { selected = !selected },
+                onClick = {
+                    if (selected) {
+                        // Disable mic capture
+                        selected = false
+                    } else {
+                        // Enable mic capture
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.RECORD_AUDIO
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            selected = true
+                        } else {
+                            // request for permission
+                            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    }
+                },
                 label = {
                     Text(text = "Audio")
                 },
@@ -85,12 +111,6 @@ fun HomeScreen(
                     if (selected) Icon(Icons.Default.Mic, null)
                     else Icon(Icons.Default.MicOff, null)
                 })
-            FilterChip(selected = selected, onClick = { selected = !selected }, label = {
-                Text(text = "Camera")
-            }, leadingIcon = { Icon(Icons.Default.VideoCameraFront, contentDescription = null) })
-            FilterChip(selected = selected, onClick = { selected = !selected }, label = {
-                Text(text = "Draw")
-            }, leadingIcon = { Icon(Icons.Default.Draw, contentDescription = null) })
         }
 
         Text("Your recordings", style = MaterialTheme.typography.titleLarge)
@@ -113,15 +133,10 @@ fun HomeScreen(
         }
     }
 
-
-
-
-
-
     Box(modifier = Modifier.fillMaxSize()) {
         RecordFab(modifier = Modifier.align(Alignment.BottomEnd), isRecording = state.isRecording) {
             if (state.isRecording) {
-                viewModel.onEvent(HomeScreenEvents.OnStopRecord)
+                viewModel.stopRecord()
             } else {
                 mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
             }
