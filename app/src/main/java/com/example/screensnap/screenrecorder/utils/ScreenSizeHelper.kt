@@ -12,9 +12,11 @@ class ScreenSizeHelper constructor(
     private val context: Context
 ) {
 
-    var screenWidth = -1
+    // Screen width
+    var width = -1
         private set
-    var screenHeight = -1
+    // Screen height
+    var height = -1
         private set
     var screenDensity = -1
         private set
@@ -34,7 +36,7 @@ class ScreenSizeHelper constructor(
 
         val wm: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val rect = wm.currentWindowMetrics.bounds
+            val rect = wm.maximumWindowMetrics.bounds
             displayWidth = abs(rect.width())
             displayHeight = abs(rect.height())
             displayDensity = context.resources.configuration.densityDpi
@@ -73,16 +75,16 @@ class ScreenSizeHelper constructor(
         val displayHeightScaled = displayHeight * sizePercentage / 100
         if (cameraWidth == -1 || cameraHeight == -1) {
             // No cameras. Fall back to the display size.
-            this.screenWidth = displayWidth
-            this.screenHeight = displayHeight
+            this.width = displayWidth
+            this.height = displayHeight
             return
         }
         var frameWidth = if (isLandscapeDevice) cameraWidth else cameraHeight
         var frameHeight = if (isLandscapeDevice) cameraHeight else cameraWidth
         if (frameWidth >= displayWidth && frameHeight >= displayHeight) {
             // Frame can hold the entire display. Use exact values.
-            this.screenWidth = displayWidth
-            this.screenHeight = displayHeight
+            this.width = displayWidth
+            this.height = displayHeight
             return
         }
 
@@ -92,8 +94,8 @@ class ScreenSizeHelper constructor(
         } else {
             frameHeight = displayHeight * frameWidth / displayWidth
         }
-        this.screenWidth = frameWidth
-        this.screenHeight = frameHeight
+        this.width = frameWidth
+        this.height = frameHeight
         return
     }
 

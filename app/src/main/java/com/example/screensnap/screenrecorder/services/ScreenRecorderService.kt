@@ -5,19 +5,22 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.MediaRecorder.AudioSource
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.presentation.home.AudioState
-import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
+import com.example.screensnap.screenrecorder.media.ScreenRec
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
+import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -35,6 +38,8 @@ class ScreenRecorderService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var mediaRecorder: MediaRecorder? = null
 
+    private lateinit var screenRec: ScreenRec
+
     private lateinit var screenSizeHelper: ScreenSizeHelper
 
     override fun onCreate() {
@@ -49,19 +54,27 @@ class ScreenRecorderService : Service() {
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent!!)
 
         // Start notification for service
-        startForeground(
-            config.notificationId,
-            createNotification()
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                config.notificationId,
+                createNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            )
+        }else{
+            startForeground(
+                config.notificationId,
+                createNotification()
+            )
+        }
 
         setupMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
-        try {
-            setupMediaRecorder(config)
-        } catch (e: Exception) {
-            Log.d("Girish", "onStartCommand: ${e.message}")
-        }
-        setupVirtualDisplay()
-
+//        try {
+//            setupMediaRecorder(config)
+//        } catch (e: Exception) {
+//            Log.d("Girish", "onStartCommand: ${e.message}")
+//        }
+//        setupVirtualDisplay()
+        screenRec = ScreenRec(screenSizeHelper, mediaProjection!!)
         startRecording()
         return START_STICKY
     }
@@ -99,11 +112,11 @@ class ScreenRecorderService : Service() {
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setAudioSource(AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth * screenSizeHelper.screenHeight)
+            setVideoEncodingBitRate(5 * screenSizeHelper.width * screenSizeHelper.height)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
             setVideoSize(
-                screenSizeHelper.screenWidth,
-                screenSizeHelper.screenHeight
+                screenSizeHelper.width,
+                screenSizeHelper.height
             ) //after setVideoSource(), setOutFormat()
             setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
 
@@ -141,35 +154,37 @@ class ScreenRecorderService : Service() {
         }, null)
     }
 
-    private fun setupVirtualDisplay() {
-        virtualDisplay = mediaProjection?.createVirtualDisplay(
-            "ScreenSnapVirtualDisplay",
-            screenSizeHelper.screenWidth,
-            screenSizeHelper.screenHeight,
-            screenSizeHelper.screenDensity,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            mediaRecorder?.surface,
-            null,
-            null
-        )
-    }
+//    private fun setupVirtualDisplay() {
+//        virtualDisplay = mediaProjection?.createVirtualDisplay(
+//            "ScreenSnapVirtualDisplay",
+//            screenSizeHelper.width,
+//            screenSizeHelper.height,
+//            screenSizeHelper.screenDensity,
+//            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+//            mediaRecorder?.surface,
+//            null,
+//            null
+//        )
+//    }
 
     private fun startRecording() {
-        try {
-            mediaRecorder?.start()
-            Log.d("Girish", "startRecording: Recording started")
-        } catch (e: Exception) {
-            Log.d("Girish", "startRecording: " + e.message)
-        }
+        screenRec.startRecording()
+//        try {
+//            mediaRecorder?.start()
+//            Log.d("Girish", "startRecording: Recording started")
+//        } catch (e: Exception) {
+//            Log.d("Girish", "startRecording: " + e.message)
+//        }
     }
 
     private fun stopRecording() {
-        try {
-            mediaRecorder?.stop()
-            stopSelf()
-        } catch (e: Exception) {
-            Log.d("Girish", "stopRecording: " + e.stackTrace)
-        }
+        screenRec.quit.set(true)
+//        try {
+//            mediaRecorder?.stop()
+//            stopSelf()
+//        } catch (e: Exception) {
+//            Log.d("Girish", "stopRecording: " + e.stackTrace)
+//        }
     }
 
     override fun onDestroy() {
