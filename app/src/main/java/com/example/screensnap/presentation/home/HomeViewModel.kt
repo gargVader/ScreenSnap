@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.screensnap.screenrecorder.Video
+import com.example.screensnap.data.Video
 import com.example.screensnap.screenrecorder.services.ScreenRecorderService
 import com.example.screensnap.screenrecorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel

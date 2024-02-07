@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.example.screensnap.screenrecorder.Video
+import com.example.screensnap.data.Video
 
 @Composable
 fun RecordingsList(videos: List<Video>?) {

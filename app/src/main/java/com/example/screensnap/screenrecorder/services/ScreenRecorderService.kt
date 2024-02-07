@@ -16,7 +16,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.presentation.home.AudioState
-import com.example.screensnap.screenrecorder.ScreenSizeHelper
+import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException

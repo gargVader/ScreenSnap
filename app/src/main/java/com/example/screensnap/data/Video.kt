@@ -1,4 +1,4 @@
-package com.example.screensnap.screenrecorder
+package com.example.screensnap.data
 
 import android.net.Uri
 
