@@ -1,13 +1,18 @@
 package com.example.screensnap.screenrecorder.media
 
+import android.annotation.SuppressLint
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.media.AudioAttributes
 import android.media.AudioFormat
+import android.media.AudioPlaybackCaptureConfiguration
+import android.media.AudioRecord
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.media.projection.MediaProjection
+import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.view.Surface
@@ -19,6 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
+
 
 class ScreenRec(
     private val screenSizeHelper: ScreenSizeHelper,
@@ -34,12 +40,13 @@ class ScreenRec(
     private var mediaMuxer: MediaMuxer
     private lateinit var videoEncoderSurface: Surface
     private var virtualDisplay: VirtualDisplay
+    private val audioRecord: AudioRecord
     private val videoBufferInfo = MediaCodec.BufferInfo()
     private val audioBufferInfo = MediaCodec.BufferInfo()
 
 
     private val scope = CoroutineScope(Dispatchers.Default + Job())
-    private var recordingJob: Job? = null
+    private var videoRecordingJob: Job? = null
 
     private var quit = AtomicBoolean(false)
     private var hasMuxerStarted = false
@@ -48,14 +55,15 @@ class ScreenRec(
 
     init {
         prepareEncoders()
+        audioRecord = createAudioRecord()
         virtualDisplay = createVD()
         mediaMuxer = createMediaMuxer()
     }
 
-    fun startRecording() {
-        recordingJob = scope.launch {
+    fun startVideoRecording() {
+        videoRecordingJob = scope.launch {
             try {
-                recordVideo()
+                readFromVideoEncoder()
             } finally {
                 // Called when quit=true
                 release()
@@ -63,14 +71,43 @@ class ScreenRec(
         }
     }
 
+    private fun startAudioRecording() {
+        scope.launch {
+            try {
+                recordAudio()
+            } finally {
+                audioRecord.release()
+            }
+        }
+    }
+
+    private fun recordAudio() {
+        audioRecord.startRecording()
+
+        while (!quit.get()) {
+            val buffer = ByteArray(config.AUDIO_BUFFER_SIZE)
+            val bytesRead = audioRecord.read(buffer, 0, config.AUDIO_BUFFER_SIZE)
+            if(bytesRead > 0) {
+                val inputBufferIdx = audioEncoder.dequeueInputBuffer(config.TIMEOUT)
+                if (inputBufferIdx >= 0) {
+                    val inputBuffer = audioEncoder.getInputBuffer(inputBufferIdx)
+                    inputBuffer?.clear()
+                    inputBuffer?.put(buffer)
+                    audioEncoder.queueInputBuffer(inputBufferIdx, 0, bytesRead, System.nanoTime() / 1000, 0)
+                }
+            }
+        }
+
+    }
+
+
     // Update the booleans that track recording state
     fun stopRecording() {
         quit.set(true)
         hasMuxerStarted = false
     }
 
-    private fun recordVideo() {
-        Log.d(TAG, "recordVideo: ")
+    private fun readFromVideoEncoder() {
         while (!quit.get()) {
             val currentIdx = videoEncoder.dequeueOutputBuffer(videoBufferInfo, config.TIMEOUT)
             Log.d(TAG, "recordVideo: currentIdx: $currentIdx")
@@ -92,6 +129,29 @@ class ScreenRec(
         }
     }
 
+    @SuppressLint("MissingPermission")
+    private fun createAudioRecord() = AudioRecord.Builder().apply {
+        setAudioFormat(
+            AudioFormat.Builder()
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .setSampleRate(config.AUDIO_SAMPLE_RATE)
+                .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
+                .build()
+        )
+
+        setBufferSizeInBytes(config.AUDIO_BUFFER_SIZE)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            setAudioPlaybackCaptureConfig(
+                AudioPlaybackCaptureConfiguration.Builder(mediaProjection)
+                    .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                    .addMatchingUsage(AudioAttributes.USAGE_GAME)
+                    .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
+                    .build()
+            )
+        }
+    }.build()
+
     private fun createVD(): VirtualDisplay {
         mediaProjection.registerCallback(object : MediaProjection.Callback() {
             override fun onStop() {
@@ -105,7 +165,7 @@ class ScreenRec(
             screenSizeHelper.height,
             screenSizeHelper.screenDensity,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            videoEncoderSurface,
+            videoEncoderSurface, // writing to video encoder
             null,
             null
         )

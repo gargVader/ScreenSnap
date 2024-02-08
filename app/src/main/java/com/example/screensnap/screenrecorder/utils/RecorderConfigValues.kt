@@ -1,5 +1,7 @@
 package com.example.screensnap.screenrecorder.utils
 
+import android.media.AudioFormat
+import android.media.AudioRecord
 import android.media.MediaFormat
 
 class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
@@ -11,6 +13,11 @@ class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
 
     val AUDIO_SAMPLE_RATE = 44100 // 44.1[KHz] is only setting guaranteed to be available on all devices
     val AUDIO_BITRATE = 64000 // 64 kbps
+    val AUDIO_BUFFER_SIZE = AudioRecord.getMinBufferSize(
+        AUDIO_SAMPLE_RATE,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT
+    ) // 2 * 1024 * 1024
 
     val width = screenSizeHelper.width
     val height = screenSizeHelper.height

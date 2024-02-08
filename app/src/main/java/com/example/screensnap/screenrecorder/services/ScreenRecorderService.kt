@@ -172,7 +172,7 @@ class ScreenRecorderService : Service() {
 //    }
 
     private fun startRecording() {
-        screenRec.startRecording()
+        screenRec.startVideoRecording()
 //        try {
 //            mediaRecorder?.start()
 //            Log.d("Girish", "startRecording: Recording started")
