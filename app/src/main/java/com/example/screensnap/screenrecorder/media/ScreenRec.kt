@@ -25,13 +25,15 @@ class ScreenRec(
     private val mediaProjection: MediaProjection,
 ) {
 
+    private val TAG = "Girish"
+
     private val config = RecorderConfigValues(screenSizeHelper)
 
     private lateinit var videoEncoder: MediaCodec
     private lateinit var audioEncoder: MediaCodec
-    private lateinit var mediaMuxer: MediaMuxer
-    private lateinit var surface: Surface
-    private lateinit var virtualDisplay: VirtualDisplay
+    private var mediaMuxer: MediaMuxer
+    private lateinit var videoEncoderSurface: Surface
+    private var virtualDisplay: VirtualDisplay
     private val videoBufferInfo = MediaCodec.BufferInfo()
     private val audioBufferInfo = MediaCodec.BufferInfo()
 
@@ -39,7 +41,7 @@ class ScreenRec(
     private val scope = CoroutineScope(Dispatchers.Default + Job())
     private var recordingJob: Job? = null
 
-    var quit = AtomicBoolean(false)
+    private var quit = AtomicBoolean(false)
     private var hasMuxerStarted = false
     private var videoTrackIdx = -1
     private var audioTrackIdx = -1
@@ -50,47 +52,64 @@ class ScreenRec(
         mediaMuxer = createMediaMuxer()
     }
 
-     fun startRecording() {
+    fun startRecording() {
         recordingJob = scope.launch {
             try {
                 recordVideo()
             } finally {
+                // Called when quit=true
                 release()
             }
         }
     }
 
+    // Update the booleans that track recording state
+    fun stopRecording() {
+        quit.set(true)
+        hasMuxerStarted = false
+    }
+
     private fun recordVideo() {
+        Log.d(TAG, "recordVideo: ")
         while (!quit.get()) {
             val currentIdx = videoEncoder.dequeueOutputBuffer(videoBufferInfo, config.TIMEOUT)
+            Log.d(TAG, "recordVideo: currentIdx: $currentIdx")
             when (currentIdx) {
                 MediaCodec.INFO_TRY_AGAIN_LATER -> {
 
                 }
 
+                // Triggered only for the very first time
                 MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
                     resetOutputFormat()
                 }
 
                 else -> {
                     encodeVideoTrack(currentIdx, videoTrackIdx)
+                    videoEncoder.releaseOutputBuffer(currentIdx, false)
                 }
             }
-
-
         }
     }
 
-    private fun createVD() = mediaProjection.createVirtualDisplay(
-        "ScreenSnapVirtualDisplay",
-        screenSizeHelper.width,
-        screenSizeHelper.height,
-        screenSizeHelper.screenDensity,
-        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-        surface,
-        null,
-        null
-    )
+    private fun createVD(): VirtualDisplay {
+        mediaProjection.registerCallback(object : MediaProjection.Callback() {
+            override fun onStop() {
+                super.onStop()
+                // TODO: release resources
+            }
+        }, null)
+        return mediaProjection.createVirtualDisplay(
+            "ScreenSnapVirtualDisplay",
+            screenSizeHelper.width,
+            screenSizeHelper.height,
+            screenSizeHelper.screenDensity,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            videoEncoderSurface,
+            null,
+            null
+        )
+    }
 
     // This method is only called for the very first time to start the muxer
     private fun resetOutputFormat() {
@@ -105,9 +124,14 @@ class ScreenRec(
 
         mediaMuxer.start()
         hasMuxerStarted = true
+        Log.d(
+            TAG,
+            "resetOutputFormat: videoTrackIdx=$videoTrackIdx audioTrackIdx=$audioTrackIdx mediaMuxer started!"
+        )
     }
 
     private fun encodeVideoTrack(currentIdx: Int, trackIdx: Int) {
+        Log.d(TAG, "encodeVideoTrack: currentIdx=$currentIdx trackIdx=$trackIdx")
         // byteBuffer is a read only buffer
         val byteBuffer = videoEncoder.getOutputBuffer(currentIdx)
         videoBufferInfo.presentationTimeUs = presentationTimeUs
@@ -118,7 +142,7 @@ class ScreenRec(
         }
 
         Log.d(
-            "Girish", "encodeVideoTrack: VideoBufferInfo size: ${videoBufferInfo.size}, " +
+            TAG, "encodeVideoTrack: VideoBufferInfo size: ${videoBufferInfo.size}, " +
                     "offset: ${videoBufferInfo.offset}, " +
                     "presentationTimeUs: ${videoBufferInfo.presentationTimeUs}"
         )
@@ -129,11 +153,12 @@ class ScreenRec(
                 byteBuffer.limit(videoBufferInfo.offset + videoBufferInfo.size)
 
                 // Feed byteBuffer to muxer
+                Log.d(TAG, "encodeVideoTrack: Writing to mediaMuxer")
                 mediaMuxer.writeSampleData(trackIdx, byteBuffer, videoBufferInfo)
 
                 prevOutputPTSUs = videoBufferInfo.presentationTimeUs
                 if ((videoBufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                    quit.set(true)
+                    stopRecording()
                 }
             }
         }
@@ -146,7 +171,7 @@ class ScreenRec(
 
     private fun createMediaMuxer(): MediaMuxer {
         val file = File(
-            Environment.getExternalStorageDirectory(),
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
             "record" + System.currentTimeMillis() + ".mp4"
         )
         return MediaMuxer(
@@ -161,7 +186,7 @@ class ScreenRec(
         audioEncoder = createAudioEncoder()
 
         // Get surface onto which virtual display will be rendered
-        surface = videoEncoder.createInputSurface()
+        videoEncoderSurface = videoEncoder.createInputSurface()
 
         videoEncoder.start()
         audioEncoder.start()
@@ -217,7 +242,7 @@ class ScreenRec(
         mediaMuxer.release()
 
         virtualDisplay.release()
-        mediaProjection.stop()
+//        mediaProjection.stop()
     }
 
 }

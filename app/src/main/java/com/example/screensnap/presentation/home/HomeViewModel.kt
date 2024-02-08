@@ -42,7 +42,7 @@ class HomeViewModel @Inject constructor(
 
                 override fun onChange(selfChange: Boolean, uri: Uri?) {
                     super.onChange(selfChange, uri)
-                    Log.d("Girish", "onChange: $selfChange, $uri")
+//                    Log.d("Girish", "onChange: $selfChange, $uri")
                     loadVideos()
                 }
             })
@@ -55,6 +55,9 @@ class HomeViewModel @Inject constructor(
     fun onEvent(event: HomeScreenEvents) {
         when (event) {
             is HomeScreenEvents.OnStartRecord -> {
+                state = state.copy(
+                    isRecording = true
+                )
                 app.startForegroundService(
                     ScreenRecorderServiceConfig(
                         mediaProjectionResultCode = event.mediaProjectionResultCode,
@@ -62,9 +65,6 @@ class HomeViewModel @Inject constructor(
                         notificationId = 1,
                         audioState = event.audioState,
                     ).toScreenRecorderServiceIntent(app)
-                )
-                state = state.copy(
-                    isRecording = true
                 )
             }
 
@@ -155,7 +155,7 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
-        Log.d("Girish", "queryVideos: $videoList")
+//        Log.d("Girish", "queryVideos: $videoList")
         return videoList
     }
 

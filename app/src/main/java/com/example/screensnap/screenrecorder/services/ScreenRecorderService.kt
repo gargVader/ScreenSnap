@@ -6,8 +6,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.MediaRecorder.AudioSource
 import android.media.projection.MediaProjection
@@ -35,7 +33,8 @@ class ScreenRecorderService : Service() {
     lateinit var mediaProjectionManager: MediaProjectionManager
 
     private var mediaProjection: MediaProjection? = null
-    private var virtualDisplay: VirtualDisplay? = null
+
+    //    private var virtualDisplay: VirtualDisplay? = null
     private var mediaRecorder: MediaRecorder? = null
 
     private lateinit var screenRec: ScreenRec
@@ -60,20 +59,21 @@ class ScreenRecorderService : Service() {
                 createNotification(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
             )
-        }else{
+        } else {
             startForeground(
                 config.notificationId,
                 createNotification()
             )
         }
 
-        setupMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
+//        setupMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
 //        try {
 //            setupMediaRecorder(config)
 //        } catch (e: Exception) {
 //            Log.d("Girish", "onStartCommand: ${e.message}")
 //        }
 //        setupVirtualDisplay()
+        mediaProjection = createMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
         screenRec = ScreenRec(screenSizeHelper, mediaProjection!!)
         startRecording()
         return START_STICKY
@@ -144,15 +144,19 @@ class ScreenRecorderService : Service() {
         }
     }
 
-    private fun setupMediaProjection(resultCode: Int, data: Intent) {
-        mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
-        mediaProjection?.registerCallback(object : MediaProjection.Callback() {
-            override fun onStop() {
-                super.onStop()
-                // TODO: release resources
-            }
-        }, null)
-    }
+//    private fun setupMediaProjection(resultCode: Int, data: Intent) {
+//        mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
+//        mediaProjection?.registerCallback(object : MediaProjection.Callback() {
+//            override fun onStop() {
+//                super.onStop()
+//                // TODO: release resources
+//            }
+//        }, null)
+//    }
+
+    private fun createMediaProjection(resultCode: Int, data: Intent) =
+        mediaProjectionManager.getMediaProjection(resultCode, data)
+
 
 //    private fun setupVirtualDisplay() {
 //        virtualDisplay = mediaProjection?.createVirtualDisplay(
@@ -178,7 +182,7 @@ class ScreenRecorderService : Service() {
     }
 
     private fun stopRecording() {
-        screenRec.quit.set(true)
+        screenRec.stopRecording()
 //        try {
 //            mediaRecorder?.stop()
 //            stopSelf()
@@ -189,8 +193,8 @@ class ScreenRecorderService : Service() {
 
     override fun onDestroy() {
         // Teardown VirtualDisplay
-        virtualDisplay?.release()
-        virtualDisplay = null
+//        virtualDisplay?.release()
+//        virtualDisplay = null
 
         // Teardown MediaRecorder
         stopRecording()
