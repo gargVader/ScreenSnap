@@ -47,6 +47,7 @@ class ScreenRecorderService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("Girish", "onStartCommand: intent=$intent")
         screenSizeHelper = ScreenSizeHelper(this)
 
         // Extract info
@@ -172,7 +173,7 @@ class ScreenRecorderService : Service() {
 //    }
 
     private fun startRecording() {
-        screenRec.startVideoRecording()
+        screenRec.startRecording()
 //        try {
 //            mediaRecorder?.start()
 //            Log.d("Girish", "startRecording: Recording started")

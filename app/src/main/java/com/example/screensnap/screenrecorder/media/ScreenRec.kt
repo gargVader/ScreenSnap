@@ -39,7 +39,7 @@ class ScreenRec(
     private lateinit var audioEncoder: MediaCodec
     private var mediaMuxer: MediaMuxer
     private lateinit var videoEncoderSurface: Surface
-    private var virtualDisplay: VirtualDisplay
+    private lateinit var virtualDisplay: VirtualDisplay
     private val audioRecord: AudioRecord
     private val videoBufferInfo = MediaCodec.BufferInfo()
     private val audioBufferInfo = MediaCodec.BufferInfo()
@@ -47,6 +47,7 @@ class ScreenRec(
 
     private val scope = CoroutineScope(Dispatchers.Default + Job())
     private var videoRecordingJob: Job? = null
+    private var audioRecordingJob: Job? = null
 
     private var quit = AtomicBoolean(false)
     private var hasMuxerStarted = false
@@ -56,48 +57,118 @@ class ScreenRec(
     init {
         prepareEncoders()
         audioRecord = createAudioRecord()
-        virtualDisplay = createVD()
         mediaMuxer = createMediaMuxer()
     }
 
-    fun startVideoRecording() {
-        videoRecordingJob = scope.launch {
+    fun startRecording() {
+//        videoRecordingJob = startVideoRecording()
+        audioRecordingJob = startAudioRecording()
+    }
+
+    fun startVideoRecording(): Job {
+        writeToVideoEncoder()
+        return scope.launch {
             try {
                 readFromVideoEncoder()
             } finally {
                 // Called when quit=true
+                audioRecordingJob?.cancel()
+                audioRecord.stop()
+                audioRecord.release()
                 release()
             }
         }
     }
 
-    private fun startAudioRecording() {
-        scope.launch {
+    private fun startAudioRecording(): Job {
+        return scope.launch {
             try {
-                recordAudio()
+                writeToAudioEncoder()
             } finally {
-                audioRecord.release()
+//                audioRecord.stop()
+//                audioRecord.release()
             }
         }
     }
 
-    private fun recordAudio() {
+    private fun writeToAudioEncoder() {
         audioRecord.startRecording()
 
         while (!quit.get()) {
-            val buffer = ByteArray(config.AUDIO_BUFFER_SIZE)
-            val bytesRead = audioRecord.read(buffer, 0, config.AUDIO_BUFFER_SIZE)
-            if(bytesRead > 0) {
-                val inputBufferIdx = audioEncoder.dequeueInputBuffer(config.TIMEOUT)
-                if (inputBufferIdx >= 0) {
-                    val inputBuffer = audioEncoder.getInputBuffer(inputBufferIdx)
-                    inputBuffer?.clear()
-                    inputBuffer?.put(buffer)
-                    audioEncoder.queueInputBuffer(inputBufferIdx, 0, bytesRead, System.nanoTime() / 1000, 0)
+            val inputBufferIdx = audioEncoder.dequeueInputBuffer(config.TIMEOUT)
+            Log.d(TAG, "writeToAudioEncoder: inputBufferIdx=$inputBufferIdx")
+            if (inputBufferIdx >= 0) {
+                val inputBuffer = audioEncoder.getInputBuffer(inputBufferIdx)!!
+                inputBuffer.clear()
+                val bytesRead = audioRecord.read(inputBuffer, config.AUDIO_BUFFER_SIZE)
+                Log.d(TAG, "writeToAudioEncoder: bytesRead=$bytesRead")
+                if (bytesRead > 0) {
+                    audioEncoder.queueInputBuffer(
+                        inputBufferIdx,
+                        0,
+                        bytesRead,
+                        presentationTimeUs,
+                        0
+                    )
+                } else {
+                    // Not sure if this will ever be called
+                    audioEncoder.queueInputBuffer(inputBufferIdx, 0, 0, presentationTimeUs, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                }
+            }
+            readFromAudioEncoder()
+        }
+    }
+
+    private fun readFromAudioEncoder() {
+        val currentIdx = audioEncoder.dequeueOutputBuffer(audioBufferInfo, config.TIMEOUT)
+        when (currentIdx) {
+            MediaCodec.INFO_TRY_AGAIN_LATER -> {
+
+            }
+
+            // Triggered only for the very first time
+            MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
+            }
+
+            else -> {
+                encodeAudioTrack(currentIdx, audioTrackIdx)
+                audioEncoder.releaseOutputBuffer(currentIdx, false)
+            }
+        }
+    }
+
+    private fun encodeAudioTrack(currentIdx: Int, trackIdx: Int) {
+        Log.d(TAG, "encodeVideoTrack: currentIdx=$currentIdx trackIdx=$trackIdx")
+        // byteBuffer is a read only buffer
+        val byteBuffer = audioEncoder.getOutputBuffer(currentIdx)
+        audioBufferInfo.presentationTimeUs = presentationTimeUs
+
+        // ignoring BUFFER_FLAG_CODEC_CONFIG
+        if (audioBufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {
+            audioBufferInfo.size = 0
+        }
+
+        Log.d(
+            TAG, "encodeVideoTrack: VideoBufferInfo size: ${audioBufferInfo.size}, " +
+                    "offset: ${audioBufferInfo.offset}, " +
+                    "presentationTimeUs: ${audioBufferInfo.presentationTimeUs}"
+        )
+
+        if (audioBufferInfo.size > 0) {
+            if (byteBuffer != null && hasMuxerStarted) {
+                byteBuffer.position(audioBufferInfo.offset)
+                byteBuffer.limit(audioBufferInfo.offset + audioBufferInfo.size)
+
+                // Feed byteBuffer to muxer
+                Log.d(TAG, "encodeAudioTrack: Writing to mediaMuxer")
+                mediaMuxer.writeSampleData(trackIdx, byteBuffer, audioBufferInfo)
+
+                prevOutputPTSUs = audioBufferInfo.presentationTimeUs
+                if ((audioBufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                    stopRecording()
                 }
             }
         }
-
     }
 
 
@@ -105,6 +176,10 @@ class ScreenRec(
     fun stopRecording() {
         quit.set(true)
         hasMuxerStarted = false
+    }
+
+    private fun writeToVideoEncoder() {
+        virtualDisplay = createVD()
     }
 
     private fun readFromVideoEncoder() {
@@ -222,7 +297,6 @@ class ScreenRec(
                 }
             }
         }
-
     }
 
     private var prevOutputPTSUs: Long = 0
@@ -230,14 +304,26 @@ class ScreenRec(
         get() = maxOf(System.nanoTime() / 1000L, prevOutputPTSUs)
 
     private fun createMediaMuxer(): MediaMuxer {
-        val file = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            "record" + System.currentTimeMillis() + ".mp4"
-        )
+        val file = createFile()
         return MediaMuxer(
             file.absolutePath,
             MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
         )
+    }
+
+    // TODO: Create a temp file
+    private fun createFile(): File {
+        val directory = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+            "ScreenSnap"
+        )
+
+        // Make sure the directory exists, create it if it doesn't
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
+        return File(directory, "ScreenSnap${System.currentTimeMillis()}.mp4")
     }
 
     /** Prepare video and audio encoders */
@@ -291,18 +377,25 @@ class ScreenRec(
             setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1)
         }
 
+    /** Prepare video and audio encoders END */
+
     private fun release() {
-        videoEncoder.stop()
-        videoEncoder.release()
+        try {
 
-        audioEncoder.stop()
-        audioEncoder.release()
+            videoEncoder.stop()
+            videoEncoder.release()
 
-        mediaMuxer.stop()
-        mediaMuxer.release()
+            audioEncoder.stop()
+            audioEncoder.release()
 
-        virtualDisplay.release()
+            mediaMuxer.stop()
+            mediaMuxer.release()
+
+            virtualDisplay.release()
 //        mediaProjection.stop()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
 }
