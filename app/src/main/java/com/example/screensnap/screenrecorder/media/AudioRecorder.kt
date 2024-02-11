@@ -9,6 +9,7 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.media.projection.MediaProjection
 import android.os.Build
+import android.util.Log
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -34,16 +35,18 @@ class AudioRecorder(
     ) = withContext(Dispatchers.Default) {
         audioRecord.startRecording()
 
-        audioEncoder.startEncode(
-            onInputBufferAvailable = { byteArray ->
-                audioRecord.read(byteArray, 0, byteArray.size)
-            },
-            onOutputBufferAvailable = onOutputBufferAvailable,
-            onOutputFormatChanged = onOutputFormatChanged,
-        )
-
-        audioRecord.stop()
-        audioRecord.release()
+        try {
+            audioEncoder.startEncode(
+                onInputBufferAvailable = { byteArray ->
+                    audioRecord.read(byteArray, 0, byteArray.size)
+                },
+                onOutputBufferAvailable = onOutputBufferAvailable,
+                onOutputFormatChanged = onOutputFormatChanged,
+            )
+        } finally {
+            audioRecord.stop()
+            audioRecord.release()
+        }
     }
 
     @SuppressLint("MissingPermission")

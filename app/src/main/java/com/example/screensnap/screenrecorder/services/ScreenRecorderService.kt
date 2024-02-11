@@ -9,11 +9,12 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.util.Log
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.lifecycleScope
 import com.example.screensnap.screenrecorder.media.ScreenRecorder
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class ScreenRecorderService : LifecycleService() {
 
     private lateinit var screenRecorder: ScreenRecorder
     private lateinit var screenSizeHelper: ScreenSizeHelper
+    private val scope = CoroutineScope(Dispatchers.IO)
     private lateinit var recordingJob: Job
 
     override fun onCreate() {
@@ -57,12 +59,15 @@ class ScreenRecorderService : LifecycleService() {
             )
         }
 
-        mediaProjection = createMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
+        mediaProjection =
+            createMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
         screenRecorder = ScreenRecorder(screenSizeHelper, mediaProjection!!)
 
-        startRecording()
+        recordingJob = scope.launch {
+            screenRecorder.startRecording()
+        }
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     // Notification for foreground service
@@ -79,23 +84,14 @@ class ScreenRecorderService : LifecycleService() {
     private fun createMediaProjection(resultCode: Int, data: Intent) =
         mediaProjectionManager.getMediaProjection(resultCode, data)
 
-
-    private fun startRecording() {
-        recordingJob = lifecycleScope.launch {
-            screenRecorder.startRecording()
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-
-        lifecycleScope.launch {
+        scope.launch {
             recordingJob.cancelAndJoin()
+//            screenRecorder.stopRecording()
+            mediaProjection?.stop()
+            mediaProjection = null
         }
-
-        // Teardown MediaProjection
-        mediaProjection?.stop()
-        mediaProjection = null
     }
 
     companion object {

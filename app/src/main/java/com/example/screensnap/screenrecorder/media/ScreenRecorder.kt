@@ -3,9 +3,11 @@ package com.example.screensnap.screenrecorder.media
 import android.media.MediaMuxer
 import android.media.projection.MediaProjection
 import android.os.Environment
+import android.util.Log
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
 import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -19,6 +21,7 @@ class ScreenRecorder(
 
     private val config = RecorderConfigValues(screenSizeHelper)
 
+    private lateinit var recordingJob: Job
     private var mediaMuxer: MediaMuxer
     private var videoTrackIdx = -1
     private var audioTrackIdx = -1
@@ -30,19 +33,21 @@ class ScreenRecorder(
         audioRecorder = AudioRecorder(config, mediaProjection)
     }
 
-    suspend fun startRecording() = withContext(Dispatchers.Default){
-        audioRecorder.startRecording(
-            onOutputBufferAvailable = { byteBuffer, bufferInfo ->
-                mediaMuxer.writeSampleData(audioTrackIdx, byteBuffer, bufferInfo)
-            },
-            onOutputFormatChanged = { mediaFormat ->
-                audioTrackIdx = mediaMuxer.addTrack(mediaFormat)
-                mediaMuxer.start()
-            }
-        )
-
-        mediaMuxer.stop()
-        mediaMuxer.release()
+    suspend fun startRecording() = withContext(Dispatchers.Default) {
+        try {
+            audioRecorder.startRecording(
+                onOutputBufferAvailable = { byteBuffer, bufferInfo ->
+                    mediaMuxer.writeSampleData(audioTrackIdx, byteBuffer, bufferInfo)
+                },
+                onOutputFormatChanged = { mediaFormat ->
+                    audioTrackIdx = mediaMuxer.addTrack(mediaFormat)
+                    mediaMuxer.start()
+                }
+            )
+        } finally {
+            mediaMuxer.stop()
+            mediaMuxer.release()
+        }
     }
 
     private fun createMediaMuxer(): MediaMuxer {

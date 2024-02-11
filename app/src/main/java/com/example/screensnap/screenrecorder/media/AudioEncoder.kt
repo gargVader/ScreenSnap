@@ -53,13 +53,15 @@ class AudioEncoder(
     ) = withContext(Dispatchers.Default) {
         encoder.start()
 
-        while (isActive) {
-            writeToEncoder(onInputBufferAvailable)
-            readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
+        try {
+            while (isActive) {
+                writeToEncoder(onInputBufferAvailable)
+                readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
+            }
+        } finally {
+            encoder.stop()
+            encoder.release()
         }
-
-        encoder.stop()
-        encoder.release()
     }
 
     private fun writeToEncoder(
@@ -111,8 +113,7 @@ class AudioEncoder(
                     if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
                         Log.d(
                             TAG, "AudioEncoder readFromEncoder: OutputBufferAvailable " +
-                                    "size=${bufferInfo.size}, offset=${bufferInfo.offset}, " +
-                                    "presentationTimeUs=${bufferInfo.presentationTimeUs}"
+                                    "size=${bufferInfo.size}, offset=${bufferInfo.offset}, "
                         )
                         onOutputBufferAvailable(outputBuffer, bufferInfo)
                     }
