@@ -7,11 +7,10 @@ import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioRecord
 import android.media.MediaCodec
 import android.media.MediaFormat
+import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.os.Build
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 
 class AudioRecorder(
@@ -23,15 +22,21 @@ class AudioRecorder(
     private val systemAudioRecord: AudioRecord
     private val systemAudioEncoder: AudioEncoder
 
+    private val micAudioRecord: AudioRecord
+    private val micAudioEncoder: AudioEncoder
+
     init {
-        systemAudioRecord = createAudioRecord()
+        systemAudioRecord = createSystemAudioRecord()
         systemAudioEncoder = AudioEncoder(config)
+
+        micAudioRecord = createMicAudioRecord()
+        micAudioEncoder = AudioEncoder(config)
     }
 
     suspend fun startSystemRecording(
         onOutputBufferAvailable: (byteBuffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) -> Unit,
-        onOutputFormatChanged: (mediaFormat: MediaFormat) -> Unit
-    ) = withContext(Dispatchers.Default) {
+        onOutputFormatChanged: suspend (mediaFormat: MediaFormat) -> Unit
+    ) {
         systemAudioRecord.startRecording()
 
         try {
@@ -48,15 +53,29 @@ class AudioRecorder(
         }
     }
 
+    suspend fun startMicRecording(
+        onOutputBufferAvailable: (byteBuffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) -> Unit,
+        onOutputFormatChanged: suspend (mediaFormat: MediaFormat) -> Unit
+    ) {
+        micAudioRecord.startRecording()
+
+        try {
+            micAudioEncoder.startEncode(
+                onInputBufferAvailable = { byteArray ->
+                    micAudioRecord.read(byteArray, 0, byteArray.size)
+                },
+                onOutputBufferAvailable = onOutputBufferAvailable,
+                onOutputFormatChanged = onOutputFormatChanged,
+            )
+        } finally {
+            micAudioRecord.stop()
+            micAudioRecord.release()
+        }
+    }
+
     @SuppressLint("MissingPermission")
-    private fun createAudioRecord() = AudioRecord.Builder().apply {
-        setAudioFormat(
-            AudioFormat.Builder()
-                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(config.AUDIO_SAMPLE_RATE)
-                .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
-                .build()
-        )
+    private fun createSystemAudioRecord() = AudioRecord.Builder().apply {
+        setAudioFormat(createAudioFormat())
 
         setBufferSizeInBytes(config.AUDIO_BUFFER_SIZE)
 
@@ -70,5 +89,20 @@ class AudioRecorder(
             )
         }
     }.build()
+
+    @SuppressLint("MissingPermission")
+    private fun createMicAudioRecord() = AudioRecord.Builder().apply {
+        setAudioFormat(createAudioFormat())
+
+        setBufferSizeInBytes(config.AUDIO_BUFFER_SIZE)
+
+        setAudioSource(MediaRecorder.AudioSource.MIC)
+    }.build()
+
+    private fun createAudioFormat() = AudioFormat.Builder()
+        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+        .setSampleRate(config.AUDIO_SAMPLE_RATE)
+        .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
+        .build()
 
 }

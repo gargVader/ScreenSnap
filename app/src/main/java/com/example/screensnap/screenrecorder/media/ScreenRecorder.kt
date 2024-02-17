@@ -3,12 +3,14 @@ package com.example.screensnap.screenrecorder.media
 import android.media.MediaMuxer
 import android.media.projection.MediaProjection
 import android.os.Environment
+import android.util.Log
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
 import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class ScreenRecorder(
@@ -20,32 +22,92 @@ class ScreenRecorder(
 
     private val config = RecorderConfigValues(screenSizeHelper)
 
-    private lateinit var recordingJob: Job
     private var mediaMuxer: MediaMuxer
+
     private var videoTrackIdx = -1
-    private var audioTrackIdx = -1
+    private var systemAudioTrackIdx = -1
+    private var micAudioTrackIdx = -1
+
+    private var systemAudioTrackInitialized = AtomicBoolean(false)
+    private var micAudioTrackInitialized = AtomicBoolean(false)
 
     private var audioRecorder: AudioRecorder
+
+    private lateinit var systemAudioRecordingJob: Job
+    private lateinit var micAudioRecordingJob: Job
 
     init {
         mediaMuxer = createMediaMuxer()
         audioRecorder = AudioRecorder(config, mediaProjection)
     }
 
-    suspend fun startRecording() = withContext(Dispatchers.Default) {
+    suspend fun startRecording() {
+        try {
+            coroutineScope {
+                systemAudioRecordingJob = launch {
+                    startSystemAudioRecording()
+                }
+                micAudioRecordingJob = launch {
+                    startMicAudioRecording()
+                }
+            }
+        } finally {
+            systemAudioRecordingJob.cancel()
+            micAudioRecordingJob.cancel()
+
+            mediaMuxer.stop()
+            mediaMuxer.release()
+        }
+    }
+
+    private suspend fun startSystemAudioRecording() {
         try {
             audioRecorder.startSystemRecording(
                 onOutputBufferAvailable = { byteBuffer, bufferInfo ->
-                    mediaMuxer.writeSampleData(audioTrackIdx, byteBuffer, bufferInfo)
+                    mediaMuxer.writeSampleData(systemAudioTrackIdx, byteBuffer, bufferInfo)
                 },
                 onOutputFormatChanged = { mediaFormat ->
-                    audioTrackIdx = mediaMuxer.addTrack(mediaFormat)
+                    systemAudioTrackIdx = mediaMuxer.addTrack(mediaFormat)
+                    systemAudioTrackInitialized.set(true)
+                    while (!micAudioTrackInitialized.get()) {
+                        // Wait for mic audio track to be initialized
+                        Log.d(
+                            TAG,
+                            "startSystemAudioRecording: Waiting for mic audio track to be initialized"
+                        )
+                        if (!systemAudioRecordingJob.isActive) break
+                    }
                     mediaMuxer.start()
                 }
             )
         } finally {
-            mediaMuxer.stop()
-            mediaMuxer.release()
+//            mediaMuxer.stop()
+//            mediaMuxer.release()
+        }
+    }
+
+    private suspend fun startMicAudioRecording() {
+        try {
+            audioRecorder.startMicRecording(
+                onOutputBufferAvailable = { byteBuffer, bufferInfo ->
+                    mediaMuxer.writeSampleData(micAudioTrackIdx, byteBuffer, bufferInfo)
+                },
+                onOutputFormatChanged = { mediaFormat ->
+                    micAudioTrackIdx = mediaMuxer.addTrack(mediaFormat)
+                    micAudioTrackInitialized.set(true)
+                    while (!systemAudioTrackInitialized.get()) {
+                        // Wait for system audio track to be initialized
+                        Log.d(
+                            TAG,
+                            "startMicAudioRecording: Waiting for system audio track to be initialized"
+                        )
+                        if (!micAudioRecordingJob.isActive) break
+                    }
+                }
+            )
+        } finally {
+//            mediaMuxer.stop()
+//            mediaMuxer.release()
         }
     }
 

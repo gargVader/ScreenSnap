@@ -49,7 +49,7 @@ class AudioEncoder(
     suspend fun startEncode(
         onInputBufferAvailable: (byteArray: ByteArray) -> Int,
         onOutputBufferAvailable: (ByteBuffer, MediaCodec.BufferInfo) -> Unit,
-        onOutputFormatChanged: (MediaFormat) -> Unit,
+        onOutputFormatChanged: suspend (MediaFormat) -> Unit,
     ) = withContext(Dispatchers.Default) {
         encoder.start()
 
@@ -91,9 +91,9 @@ class AudioEncoder(
         }
     }
 
-    private fun readFromEncoder(
+    private suspend fun readFromEncoder(
         onOutputBufferAvailable: (ByteBuffer, MediaCodec.BufferInfo) -> Unit,
-        onOutputFormatChanged: (MediaFormat) -> Unit,
+        onOutputFormatChanged: suspend (MediaFormat) -> Unit,
     ) {
         val outputBufferIdx = encoder.dequeueOutputBuffer(bufferInfo, config.TIMEOUT)
         when (outputBufferIdx) {

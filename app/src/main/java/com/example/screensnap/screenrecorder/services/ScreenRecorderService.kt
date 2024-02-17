@@ -14,10 +14,11 @@ import com.example.screensnap.screenrecorder.services.pendingintent.createScreen
 import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 
 @AndroidEntryPoint
 class ScreenRecorderService : LifecycleService() {
@@ -28,7 +29,10 @@ class ScreenRecorderService : LifecycleService() {
 
     private lateinit var screenRecorder: ScreenRecorder
     private lateinit var screenSizeHelper: ScreenSizeHelper
-    private val scope = CoroutineScope(Dispatchers.IO)
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
+    private val scope = CoroutineScope(singleThreadContext)
     private lateinit var recordingJob: Job
 
     override fun onCreate() {
