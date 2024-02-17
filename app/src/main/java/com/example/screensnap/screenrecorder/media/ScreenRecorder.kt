@@ -3,7 +3,6 @@ package com.example.screensnap.screenrecorder.media
 import android.media.MediaMuxer
 import android.media.projection.MediaProjection
 import android.os.Environment
-import android.util.Log
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
 import com.example.screensnap.screenrecorder.utils.ScreenSizeHelper
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +34,7 @@ class ScreenRecorder(
 
     suspend fun startRecording() = withContext(Dispatchers.Default) {
         try {
-            audioRecorder.startRecording(
+            audioRecorder.startSystemRecording(
                 onOutputBufferAvailable = { byteBuffer, bufferInfo ->
                     mediaMuxer.writeSampleData(audioTrackIdx, byteBuffer, bufferInfo)
                 },

@@ -9,7 +9,6 @@ import android.media.MediaCodec
 import android.media.MediaFormat
 import android.media.projection.MediaProjection
 import android.os.Build
-import android.util.Log
 import com.example.screensnap.screenrecorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,31 +20,31 @@ class AudioRecorder(
 ) {
 
     private val TAG = "Girish"
-    private val audioRecord: AudioRecord
-    private val audioEncoder: AudioEncoder
+    private val systemAudioRecord: AudioRecord
+    private val systemAudioEncoder: AudioEncoder
 
     init {
-        audioRecord = createAudioRecord()
-        audioEncoder = AudioEncoder(config)
+        systemAudioRecord = createAudioRecord()
+        systemAudioEncoder = AudioEncoder(config)
     }
 
-    suspend fun startRecording(
+    suspend fun startSystemRecording(
         onOutputBufferAvailable: (byteBuffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) -> Unit,
         onOutputFormatChanged: (mediaFormat: MediaFormat) -> Unit
     ) = withContext(Dispatchers.Default) {
-        audioRecord.startRecording()
+        systemAudioRecord.startRecording()
 
         try {
-            audioEncoder.startEncode(
+            systemAudioEncoder.startEncode(
                 onInputBufferAvailable = { byteArray ->
-                    audioRecord.read(byteArray, 0, byteArray.size)
+                    systemAudioRecord.read(byteArray, 0, byteArray.size)
                 },
                 onOutputBufferAvailable = onOutputBufferAvailable,
                 onOutputFormatChanged = onOutputFormatChanged,
             )
         } finally {
-            audioRecord.stop()
-            audioRecord.release()
+            systemAudioRecord.stop()
+            systemAudioRecord.release()
         }
     }
 
