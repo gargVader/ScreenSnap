@@ -15,6 +15,7 @@ import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
+import com.example.screensnap.presentation.home.AudioState
 import com.example.screensnap.screenrecorder.ScreenSizeHelper
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import dagger.hilt.android.AndroidEntryPoint
@@ -108,7 +109,7 @@ class ScreenRecorderService : Service() {
 
             setOutputFile(fileDescriptor)
 //          Audio
-            if (config.shouldCaptureMic) {
+            if (config.audioState != AudioState.Off) {
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                 setAudioEncodingBitRate(128000)
                 setAudioSamplingRate(44100)
@@ -213,12 +214,15 @@ data class ScreenRecorderServiceConfig(
     val mediaProjectionResultCode: Int,
     val mediaProjectionData: Intent,
     val notificationId: Int,
-    val shouldCaptureMic: Boolean = false,
+    val audioState: AudioState,
 ) {
     fun toScreenRecorderServiceIntent(context: Context): Intent =
         Intent(context, ScreenRecorderService::class.java).apply {
             putExtra(KEY_MP_RESULT_CODE, mediaProjectionResultCode)
             putExtra(KEY_MP_DATA, mediaProjectionData)
+            putExtra(KEY_NOTIFICATION_ID, notificationId)
+            putExtra(KEY_AUDIO_MIC_PERCENTAGE, audioState.micPercentage)
+            putExtra(KEY_AUDIO_SYSTEM_PERCENTAGE, audioState.systemPercentage)
         }
 
     companion object {
@@ -227,13 +231,19 @@ data class ScreenRecorderServiceConfig(
         private val KEY_MP_DATA = "mediaProjectionData"
         private val KEY_NOTIFICATION_ID = "notificationId"
         private val KEY_SHOULD_CAPTURE_MIC = "shouldCaptureMic"
+        private val KEY_AUDIO_MIC_PERCENTAGE = "micPercentage"
+        private val KEY_AUDIO_SYSTEM_PERCENTAGE = "systemPercentage"
+
         fun createFromScreenRecorderServiceIntent(intent: Intent): ScreenRecorderServiceConfig =
             intent.extras!!.let { extras ->
                 ScreenRecorderServiceConfig(
                     mediaProjectionResultCode = extras.getInt(KEY_MP_RESULT_CODE),
                     mediaProjectionData = extras.getParcelable(KEY_MP_DATA)!!,
                     notificationId = extras.getInt(KEY_NOTIFICATION_ID),
-                    shouldCaptureMic = extras.getBoolean(KEY_SHOULD_CAPTURE_MIC)
+                    audioState = AudioState.createFromPercentage(
+                        extras.getInt(KEY_AUDIO_MIC_PERCENTAGE),
+                        extras.getInt(KEY_AUDIO_SYSTEM_PERCENTAGE)
+                    )
                 )
             }
     }

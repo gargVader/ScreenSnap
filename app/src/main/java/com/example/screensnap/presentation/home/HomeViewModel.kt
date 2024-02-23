@@ -63,28 +63,32 @@ class HomeViewModel @Inject constructor(
         loadVideos()
     }
 
-    fun startRecord(
-        mediaProjectionResultCode: Int,
-        mediaProjectionData: Intent,
-        shouldCaptureMic: Boolean
-    ) {
-        app.startForegroundService(
-            ScreenRecorderServiceConfig(
-                mediaProjectionResultCode = mediaProjectionResultCode,
-                mediaProjectionData = mediaProjectionData,
-                notificationId = 1,
-                shouldCaptureMic = shouldCaptureMic,
-            ).toScreenRecorderServiceIntent(app)
-        )
-        state = state.copy(
-            isRecording = true
-        )
-    }
+    fun onEvent(event: HomeScreenEvents) {
+        when (event) {
+            is HomeScreenEvents.OnStartRecord -> {
+                app.startForegroundService(
+                    ScreenRecorderServiceConfig(
+                        mediaProjectionResultCode = event.mediaProjectionResultCode,
+                        mediaProjectionData = event.mediaProjectionData,
+                        notificationId = 1,
+                        audioState = event.audioState,
+                    ).toScreenRecorderServiceIntent(app)
+                )
+                state = state.copy(
+                    isRecording = true
+                )
+            }
 
-    fun stopRecord(){
-        val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
-        app.stopService(screenRecorderServiceIntent)
-        state = state.copy(isRecording = false)
+            is HomeScreenEvents.OnStopRecord -> {
+                val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
+                app.stopService(screenRecorderServiceIntent)
+                state = state.copy(isRecording = false)
+            }
+
+            is HomeScreenEvents.OnUpdateAudioState -> {
+                state = state.copy(audioState = event.audioState)
+            }
+        }
     }
 
     fun getScreenCapturePermissionIntent(): Intent {

@@ -30,10 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,21 +48,22 @@ fun HomeScreen(
 ) {
 
     val state = viewModel.state
-    var selected by remember { mutableStateOf(false) }
     val mediaProjectionPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { activityResult ->
             if (activityResult.resultCode == Activity.RESULT_OK) {
-                viewModel.startRecord(
-                    mediaProjectionResultCode = activityResult.resultCode,
-                    mediaProjectionData = activityResult.data!!,
-                    shouldCaptureMic = selected
+                viewModel.onEvent(
+                    HomeScreenEvents.OnStartRecord(
+                        mediaProjectionResultCode = activityResult.resultCode,
+                        mediaProjectionData = activityResult.data!!,
+                        audioState = state.audioState
+                    )
                 )
             }
         }
     val audioPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                selected = true
+
             } else {
                 Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
             }
@@ -85,11 +82,11 @@ fun HomeScreen(
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
-                selected = selected,
+                selected = state.audioState != AudioState.Off,
                 onClick = {
-                    if (selected) {
+                    if (state.audioState != AudioState.Off) {
                         // Disable mic capture
-                        selected = false
+                        viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(AudioState.Off))
                     } else {
                         // Enable mic capture
                         if (ContextCompat.checkSelfPermission(
@@ -97,7 +94,7 @@ fun HomeScreen(
                                 Manifest.permission.RECORD_AUDIO
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            selected = true
+                            viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(AudioState.MicOnly))
                         } else {
                             // request for permission
                             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -108,8 +105,8 @@ fun HomeScreen(
                     Text(text = "Audio")
                 },
                 leadingIcon = {
-                    if (selected) Icon(Icons.Default.Mic, null)
-                    else Icon(Icons.Default.MicOff, null)
+                    if (state.audioState == AudioState.Off) Icon(Icons.Default.MicOff, null)
+                    else Icon(Icons.Default.Mic, null)
                 })
         }
 
@@ -136,10 +133,11 @@ fun HomeScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         RecordFab(modifier = Modifier.align(Alignment.BottomEnd), isRecording = state.isRecording) {
             if (state.isRecording) {
-                viewModel.stopRecord()
+                viewModel.onEvent(HomeScreenEvents.OnStopRecord)
             } else {
                 mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
             }
         }
     }
 }
+
