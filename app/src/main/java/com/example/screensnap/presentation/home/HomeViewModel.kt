@@ -22,7 +22,6 @@ class HomeViewModel @Inject constructor(
     var state by mutableStateOf(HomeScreenState())
         private set
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun onEvent(event: HomeScreenEvents) {
         when (event) {
             is HomeScreenEvents.OnStartRecord -> {

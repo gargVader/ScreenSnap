@@ -28,3 +28,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/*
+TODOs:
+
+- Build UI. Learn more about theming & desing system in compose.
+- Recording List UI
+
+- Use DisplayMetrics to set video size for MediaRecorder and VirtualDisplay
+- Build settings screen & Fix audio in RecorderService
+
+- Notification feature
+- Figure out solution for Pause, Stop, Duration & size display.
+
+- Camera feature
+- Draw feature
+ */

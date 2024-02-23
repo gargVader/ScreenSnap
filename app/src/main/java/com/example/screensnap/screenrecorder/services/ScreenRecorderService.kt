@@ -39,21 +39,19 @@ class ScreenRecorderService : Service() {
     private var virtualDisplay: VirtualDisplay? = null
     private var mediaRecorder: MediaRecorder? = null
 
-    private lateinit var fileName: String
-
     override fun onCreate() {
-        fileName = "ScreenSnap${System.currentTimeMillis()}.mp4"
         mediaProjectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+        // Extract info
         val intentExtras: Bundle = intent?.extras!!
         val resultCode = intentExtras.getInt(KEY_RESULT_CODE)
         val data: Intent = intentExtras.getParcelable(KEY_DATA)!!
         val notificationId = intentExtras.getInt(KEY_NOTIFICATION_ID, 1)
 
+        // Start notification for service
         startForeground(
             notificationId,
             createNotification()
@@ -82,14 +80,7 @@ class ScreenRecorderService : Service() {
     }
 
     private fun setupMediaRecorder() {
-        val formatter = SimpleDateFormat(
-            "yyyy-MM-dd-HH-mm-ss",
-            Locale.getDefault()
-        )
-        val curDate = Date(System.currentTimeMillis())
-        val curTime = formatter.format(curDate).replace(" ", "")
-        val fileName = "ScreenSnap$curTime.mp4"
-
+        val fileName = getFileName()
         val contentValues = ContentValues().apply {
             put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
             put(MediaStore.Video.Media.TITLE, fileName)
@@ -98,6 +89,12 @@ class ScreenRecorderService : Service() {
         }
         val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
             ?: throw Exception("Cannot create video file")
+        val fileDescriptor = Objects.requireNonNull<ParcelFileDescriptor?>(
+            contentResolver.openFileDescriptor(
+                uri,
+                "rw"
+            )
+        ).fileDescriptor
 
 
         mediaRecorder = MediaRecorder().apply {
@@ -112,13 +109,6 @@ class ScreenRecorderService : Service() {
             ) //after setVideoSource(), setOutFormat()
             setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
 
-            val fileDescriptor = Objects.requireNonNull<ParcelFileDescriptor?>(
-                contentResolver.openFileDescriptor(
-                    uri,
-                    "rw"
-                )
-            ).fileDescriptor
-
             setOutputFile(fileDescriptor)
 //          Audio
 //            setAudioEncoder()
@@ -126,10 +116,10 @@ class ScreenRecorderService : Service() {
 //            setAudioSamplingRate()
 
 //          Listeners
-            setOnErrorListener { mr, what, extra ->
+            setOnErrorListener { mediaRecorder, what, extra ->
                 Log.d("Girish", "OnErrorListener: what=$what extra=$extra")
             }
-            setOnInfoListener { mr, what, extra ->
+            setOnInfoListener { mediaRecorder, what, extra ->
                 Log.d("Girish", "OnInfoListener: what=$what extra=$extra")
             }
 
@@ -188,6 +178,16 @@ class ScreenRecorderService : Service() {
 
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun getFileName(): String{
+        val formatter = SimpleDateFormat(
+            "yyyy-MM-dd-HH-mm-ss",
+            Locale.getDefault()
+        )
+        val curDate = Date(System.currentTimeMillis())
+        val curTime = formatter.format(curDate).replace(" ", "")
+        return "ScreenSnap$curTime.mp4"
+    }
 
     companion object {
 
