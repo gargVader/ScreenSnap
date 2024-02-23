@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,7 +22,7 @@ fun RecordFab(
     isRecording: Boolean,
     onClick: () -> Unit,
 ) {
-    FloatingActionButton(
+    LargeFloatingActionButton(
         modifier = modifier.padding(bottom = 34.dp, end = 24.dp, start = 24.dp),
         onClick = onClick,
         shape = CircleShape
