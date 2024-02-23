@@ -8,6 +8,7 @@ import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
+import android.media.MediaRecorder.AudioSource
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
@@ -56,12 +57,12 @@ class ScreenRecorderService : Service() {
             createNotification()
         )
 
+        setupMediaProjection(resultCode, data)
         try {
             setupMediaRecorder()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             Log.d("Girish", "onStartCommand: ${e.message}")
         }
-        setupMediaProjection(resultCode, data)
         setupVirtualDisplay()
 
         startRecording()
@@ -99,8 +100,9 @@ class ScreenRecorderService : Service() {
         mediaRecorder = MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
+            setAudioSource(AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth *  screenSizeHelper.screenHeight)
+            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth * screenSizeHelper.screenHeight)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
             setVideoSize(
                 screenSizeHelper.screenWidth,
@@ -110,9 +112,9 @@ class ScreenRecorderService : Service() {
 
             setOutputFile(fileDescriptor)
 //          Audio
-//            setAudioEncoder()
-//            setAudioEncodingBitRate()
-//            setAudioSamplingRate()
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setAudioEncodingBitRate(128000)
+            setAudioSamplingRate(44100)
 
 //          Listeners
             setOnErrorListener { mediaRecorder, what, extra ->
@@ -132,7 +134,7 @@ class ScreenRecorderService : Service() {
 
     private fun setupMediaProjection(resultCode: Int, data: Intent) {
         mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
-        mediaProjection?.registerCallback(object : MediaProjection.Callback(){
+        mediaProjection?.registerCallback(object : MediaProjection.Callback() {
             override fun onStop() {
                 super.onStop()
                 // TODO: release resources
@@ -143,9 +145,13 @@ class ScreenRecorderService : Service() {
     private fun setupVirtualDisplay() {
         virtualDisplay = mediaProjection?.createVirtualDisplay(
             "ScreenSnapVirtualDisplay",
-            screenSizeHelper.screenWidth, screenSizeHelper.screenHeight, screenSizeHelper.screenDensity,
+            screenSizeHelper.screenWidth,
+            screenSizeHelper.screenHeight,
+            screenSizeHelper.screenDensity,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            mediaRecorder?.surface, null, null
+            mediaRecorder?.surface,
+            null,
+            null
         )
     }
 
@@ -172,19 +178,20 @@ class ScreenRecorderService : Service() {
         virtualDisplay?.release()
         virtualDisplay = null
 
+        // Teardown MediaRecorder
+        stopRecording()
+        mediaRecorder?.release()
+        mediaRecorder = null
+
         // Teardown MediaProjection
         mediaProjection?.stop()
         mediaProjection = null
-
-        // Teardown MediaRecorder
-        mediaRecorder?.release()
-        mediaRecorder = null
     }
 
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun getFileName(): String{
+    private fun getFileName(): String {
         val formatter = SimpleDateFormat(
             "yyyy-MM-dd-HH-mm-ss",
             Locale.getDefault()

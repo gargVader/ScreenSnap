@@ -2,11 +2,9 @@ package com.example.screensnap.presentation.home
 
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Draw
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoCameraFront
 import androidx.compose.material3.CircularProgressIndicator
@@ -75,6 +75,16 @@ fun HomeScreen(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = selected,
+                onClick = { selected = !selected },
+                label = {
+                    Text(text = "Audio")
+                },
+                leadingIcon = {
+                    if (selected) Icon(Icons.Default.Mic, null)
+                    else Icon(Icons.Default.MicOff, null)
+                })
             FilterChip(selected = selected, onClick = { selected = !selected }, label = {
                 Text(text = "Camera")
             }, leadingIcon = { Icon(Icons.Default.VideoCameraFront, contentDescription = null) })
