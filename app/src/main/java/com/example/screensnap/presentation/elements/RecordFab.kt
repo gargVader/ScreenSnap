@@ -6,15 +6,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun RecordFab(
     modifier: Modifier = Modifier,
+    isRecording: Boolean,
     onClick: () -> Unit,
 ) {
     FloatingActionButton(
@@ -22,11 +26,21 @@ fun RecordFab(
         onClick = onClick,
         shape = CircleShape
     ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(Color.Red)
-        )
+        if (isRecording) {
+            Text(text = "Stop")
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color.Red)
+            )
+        }
     }
+}
+
+@Preview
+@Composable
+fun RecordFabPreview() {
+    RecordFab(onClick = { /*TODO*/ }, isRecording = false)
 }

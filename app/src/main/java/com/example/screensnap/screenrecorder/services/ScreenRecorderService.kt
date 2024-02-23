@@ -2,6 +2,7 @@ package com.example.screensnap.screenrecorder.services
 
 import android.app.Notification
 import android.app.Service
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
@@ -9,14 +10,12 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.HandlerThread
 import android.os.IBinder
-import android.os.Looper
-import android.os.Message
-import android.os.Process
+import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,14 +23,16 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Objects
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timerTask
+import kotlin.math.log
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
 
-    @Inject
+    // Note: Unable to inject using DI. Always NULL
     lateinit var mediaProjectionManager: MediaProjectionManager
 
     private var mediaProjection: MediaProjection? = null
@@ -58,16 +59,15 @@ class ScreenRecorderService : Service() {
             createNotification()
         )
 
-        setupMediaRecorder()
+        try {
+            setupMediaRecorder()
+        }catch (e: Exception){
+            Log.d("Girish", "onStartCommand: ${e.message}")
+        }
         setupMediaProjection(resultCode, data)
         setupVirtualDisplay()
 
         startRecording()
-        Timer().schedule(timerTask {
-            stopRecording()
-            stopSelf()
-        }, 5 * 1000)
-
         return START_STICKY
     }
 
@@ -88,22 +88,38 @@ class ScreenRecorderService : Service() {
         )
         val curDate = Date(System.currentTimeMillis())
         val curTime = formatter.format(curDate).replace(" ", "")
+        val fileName = "ScreenSnap$curTime.mp4"
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
+            put(MediaStore.Video.Media.TITLE, fileName)
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+        }
+        val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+            ?: throw Exception("Cannot create video file")
+
 
         mediaRecorder = MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            setOutputFile(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).absolutePath + "/ScreenSnap" + curTime + ".mp4"
-            )
+            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+            setVideoEncodingBitRate(5 * 720 * 1280)
+            setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
             setVideoSize(
                 720,
                 1280
             ) //after setVideoSource(), setOutFormat()
-            setVideoEncoder(MediaRecorder.VideoEncoder.H264);  //after setOutputFormat()
-            setVideoEncodingBitRate(5 * 720 * 1280)
             setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
 
+            val fileDescriptor = Objects.requireNonNull<ParcelFileDescriptor?>(
+                contentResolver.openFileDescriptor(
+                    uri,
+                    "rw"
+                )
+            ).fileDescriptor
+
+            setOutputFile(fileDescriptor)
 //          Audio
 //            setAudioEncoder()
 //            setAudioEncodingBitRate()
@@ -150,7 +166,7 @@ class ScreenRecorderService : Service() {
     private fun stopRecording() {
         try {
             mediaRecorder?.stop()
-//            stopSelf()
+            stopSelf()
         } catch (e: Exception) {
             Log.d("Girish", "stopRecording: " + e.stackTrace)
         }

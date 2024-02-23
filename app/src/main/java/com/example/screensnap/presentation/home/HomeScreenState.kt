@@ -1,4 +1,5 @@
 package com.example.screensnap.presentation.home
 
-class HomeScreenState {
-}
+data class HomeScreenState(
+    val isRecording: Boolean = false
+)
