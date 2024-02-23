@@ -16,6 +16,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
+import java.io.File
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
@@ -78,9 +79,16 @@ class ScreenRecorderService : Service() {
             registerCallback(object : MediaProjection.Callback() {}, null)
         }
 
-    private fun createScreenRecorder() =
+    private fun createScreenRecorder(): ScreenRecorder {
 //        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
-        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver)
+        val tempVideoFile = File(cacheDir, "ScreenSnapTemp.mp4")
+        return ScreenRecorder(
+            mediaProjection,
+            screenSizeHelper,
+            contentResolver,
+            tempVideoFile,
+        )
+    }
 
 
     override fun onDestroy() {

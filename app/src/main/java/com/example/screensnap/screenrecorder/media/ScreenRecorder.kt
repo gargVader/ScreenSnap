@@ -12,6 +12,7 @@ import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.presentation.home.AudioState
 import com.example.screensnap.screenrecorder.ScreenSizeHelper
+import java.io.File
 import java.io.FileDescriptor
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -23,6 +24,7 @@ class ScreenRecorder(
     private val mediaProjection: MediaProjection,
     private val screenSizeHelper: ScreenSizeHelper,
     private val contentResolver: ContentResolver,
+    private val tempVideoFile: File,
 //    private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
@@ -61,7 +63,7 @@ class ScreenRecorder(
             ) //after setVideoSource(), setOutFormat()
             setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
 
-            setOutputFile(fileDescriptor)
+            setOutputFile(tempVideoFile)
 //          Audio
             if (audioState is AudioState.MicOnly || audioState is AudioState.MicAndSystem) {
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -95,7 +97,6 @@ class ScreenRecorder(
         null,
         null
     )
-
 
     private fun createOutputFile(): FileDescriptor {
         val fileName = createFileName()
