@@ -11,7 +11,6 @@ import android.media.MediaRecorder
 import android.media.MediaRecorder.AudioSource
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import android.os.Bundle
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
@@ -46,20 +45,17 @@ class ScreenRecorderService : Service() {
         screenSizeHelper = ScreenSizeHelper(this)
 
         // Extract info
-        val intentExtras: Bundle = intent?.extras!!
-        val resultCode = intentExtras.getInt(KEY_RESULT_CODE)
-        val data: Intent = intentExtras.getParcelable(KEY_DATA)!!
-        val notificationId = intentExtras.getInt(KEY_NOTIFICATION_ID, 1)
+        val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent!!)
 
         // Start notification for service
         startForeground(
-            notificationId,
+            config.notificationId,
             createNotification()
         )
 
-        setupMediaProjection(resultCode, data)
+        setupMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
         try {
-            setupMediaRecorder()
+            setupMediaRecorder(config)
         } catch (e: Exception) {
             Log.d("Girish", "onStartCommand: ${e.message}")
         }
@@ -79,7 +75,7 @@ class ScreenRecorderService : Service() {
             .build()
     }
 
-    private fun setupMediaRecorder() {
+    private fun setupMediaRecorder(config: ScreenRecorderServiceConfig) {
         val fileName = getFileName()
         val contentValues = ContentValues().apply {
             put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
@@ -112,9 +108,11 @@ class ScreenRecorderService : Service() {
 
             setOutputFile(fileDescriptor)
 //          Audio
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioEncodingBitRate(128000)
-            setAudioSamplingRate(44100)
+            if (config.shouldCaptureMic) {
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setAudioEncodingBitRate(128000)
+                setAudioSamplingRate(44100)
+            }
 
 //          Listeners
             setOnErrorListener { mediaRecorder, what, extra ->
@@ -202,22 +200,41 @@ class ScreenRecorderService : Service() {
     }
 
     companion object {
-
-        private const val KEY_RESULT_CODE = "resultCode"
-        private const val KEY_DATA = "data"
-        private const val KEY_NOTIFICATION_ID = "notificationId"
-
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID = "Screen_Snap_Channel_ID"
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME = "Screen Snap"
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION =
             "To show notifications for Screen Snap"
 
-        fun createIntent(context: Context, resultCode: Int, data: Intent): Intent {
-            return Intent(context, ScreenRecorderService::class.java).apply {
-                putExtra(KEY_RESULT_CODE, resultCode)
-                putExtra(KEY_DATA, data)
-            }
-        }
     }
 
+}
+
+data class ScreenRecorderServiceConfig(
+    val mediaProjectionResultCode: Int,
+    val mediaProjectionData: Intent,
+    val notificationId: Int,
+    val shouldCaptureMic: Boolean = false,
+) {
+    fun toScreenRecorderServiceIntent(context: Context): Intent =
+        Intent(context, ScreenRecorderService::class.java).apply {
+            putExtra(KEY_MP_RESULT_CODE, mediaProjectionResultCode)
+            putExtra(KEY_MP_DATA, mediaProjectionData)
+        }
+
+    companion object {
+
+        private val KEY_MP_RESULT_CODE = "mediaProjectionResultCode"
+        private val KEY_MP_DATA = "mediaProjectionData"
+        private val KEY_NOTIFICATION_ID = "notificationId"
+        private val KEY_SHOULD_CAPTURE_MIC = "shouldCaptureMic"
+        fun createFromScreenRecorderServiceIntent(intent: Intent): ScreenRecorderServiceConfig =
+            intent.extras!!.let { extras ->
+                ScreenRecorderServiceConfig(
+                    mediaProjectionResultCode = extras.getInt(KEY_MP_RESULT_CODE),
+                    mediaProjectionData = extras.getParcelable(KEY_MP_DATA)!!,
+                    notificationId = extras.getInt(KEY_NOTIFICATION_ID),
+                    shouldCaptureMic = extras.getBoolean(KEY_SHOULD_CAPTURE_MIC)
+                )
+            }
+    }
 }
