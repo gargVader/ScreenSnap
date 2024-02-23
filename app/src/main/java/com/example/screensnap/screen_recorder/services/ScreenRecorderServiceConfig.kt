@@ -1,4 +1,4 @@
-package com.example.screensnap.screenrecorder.services
+package com.example.screensnap.screen_recorder.services
 
 import android.content.Context
 import android.content.Intent

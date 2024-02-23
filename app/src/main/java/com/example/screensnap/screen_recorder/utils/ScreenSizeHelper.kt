@@ -1,4 +1,4 @@
-package com.example.screensnap.screenrecorder
+package com.example.screensnap.screen_recorder.utils
 
 import android.content.Context
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE

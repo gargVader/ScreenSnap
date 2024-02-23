@@ -36,11 +36,11 @@
         </activity>
 
         <service
-            android:name=".screenrecorder.services.ScreenRecorderService"
+            android:name=".screen_recorder.services.ScreenRecorderService"
             android:foregroundServiceType="mediaProjection" />
 
         <receiver
-            android:name=".screenrecorder.receiver.NotificationReceiver"
+            android:name=".screen_recorder.receiver.NotificationReceiver"
             android:exported="false" />
 
     </application>

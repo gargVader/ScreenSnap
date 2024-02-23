@@ -3,7 +3,7 @@ package com.example.screensnap
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import com.example.screensnap.screenrecorder.services.ScreenRecorderService
+import com.example.screensnap.screen_recorder.services.ScreenRecorderService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

@@ -15,9 +15,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.screensnap.data.ScreenSnapDatastore
-import com.example.screensnap.screenrecorder.Video
-import com.example.screensnap.screenrecorder.services.ScreenRecorderService
-import com.example.screensnap.screenrecorder.services.ScreenRecorderServiceConfig
+import com.example.screensnap.presentation.Video
+import com.example.screensnap.screen_recorder.services.ScreenRecorderService
+import com.example.screensnap.screen_recorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.example.screensnap.screenrecorder.media
+package com.example.screensnap.screen_recorder
 
 import android.content.ContentResolver
 import android.content.ContentValues
@@ -11,7 +11,11 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.presentation.home.AudioState
-import com.example.screensnap.screenrecorder.ScreenSizeHelper
+import com.example.screensnap.screen_recorder.system_audio_recorder.SystemAudioRecorder
+import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileDescriptor
 import java.io.IOException
@@ -22,25 +26,36 @@ import java.util.Objects
 
 class ScreenRecorder(
     private val mediaProjection: MediaProjection,
-    private val screenSizeHelper: ScreenSizeHelper,
+    private val config: RecorderConfigValues,
     private val contentResolver: ContentResolver,
     private val tempVideoFile: File,
+    private val tempAudioFile: File,
 //    private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
     private lateinit var mediaRecorder: MediaRecorder
+//    private lateinit var systemAudioRecorder: SystemAudioRecorder
+//    private lateinit var systemAudioRecordingJob: Job
 
     suspend fun startRecording() {
         mediaRecorder = createMediaRecorder()
         virtualDisplay = createVirtualDisplay()
+//        systemAudioRecorder = createSystemAudioRecorder()
 
-        mediaRecorder.start()
+        coroutineScope {
+            mediaRecorder.start()
+//            systemAudioRecordingJob = launch {
+//                systemAudioRecorder.startRecording()
+//            }
+        }
     }
 
     fun stopRecording() {
         mediaRecorder.stop()
         mediaRecorder.release()
         virtualDisplay.release()
+
+//        systemAudioRecordingJob.cancel()
     }
 
     private suspend fun createMediaRecorder(): MediaRecorder {
@@ -54,21 +69,21 @@ class ScreenRecorder(
             if (audioState is AudioState.MicOnly || audioState is AudioState.MicAndSystem) {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
             }
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth * screenSizeHelper.screenHeight)
-            setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
+            setOutputFormat(config.mediaRecorderOutputFormat)
+            setVideoEncodingBitRate(config.videoEncodingBitrate)
+            setVideoEncoder(config.videoEncoder)  //after setOutputFormat()
             setVideoSize(
-                screenSizeHelper.screenWidth,
-                screenSizeHelper.screenHeight
+                config.screenWidth,
+                config.screenHeight
             ) //after setVideoSource(), setOutFormat()
-            setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
+            setVideoFrameRate(config.videoFrameRate) //after setVideoSource(), setOutFormat()
 
             setOutputFile(tempVideoFile)
 //          Audio
             if (audioState is AudioState.MicOnly || audioState is AudioState.MicAndSystem) {
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setAudioEncodingBitRate(128000)
-                setAudioSamplingRate(44100)
+                setAudioEncoder(config.audioEncoder)
+                setAudioEncodingBitRate(config.audioEncodingBitrate)
+                setAudioSamplingRate(config.audioSamplingRate)
             }
 
 //          Listeners
@@ -89,14 +104,17 @@ class ScreenRecorder(
 
     private fun createVirtualDisplay() = mediaProjection.createVirtualDisplay(
         "ScreenSnapVirtualDisplay",
-        screenSizeHelper.screenWidth,
-        screenSizeHelper.screenHeight,
-        screenSizeHelper.screenDensity,
+        config.screenWidth,
+        config.screenHeight,
+        config.screenDensity,
         DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
         mediaRecorder.surface,
         null,
         null
     )
+
+    private fun createSystemAudioRecorder() =
+        SystemAudioRecorder(config, mediaProjection, tempAudioFile)
 
     private fun createOutputFile(): FileDescriptor {
         val fileName = createFileName()

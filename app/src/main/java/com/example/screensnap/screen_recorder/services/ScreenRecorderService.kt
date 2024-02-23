@@ -1,4 +1,4 @@
-package com.example.screensnap.screenrecorder.services
+package com.example.screensnap.screen_recorder.services
 
 import android.app.Notification
 import android.app.Service
@@ -7,9 +7,10 @@ import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
-import com.example.screensnap.screenrecorder.ScreenSizeHelper
-import com.example.screensnap.screenrecorder.media.ScreenRecorder
-import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
+import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
+import com.example.screensnap.screen_recorder.ScreenRecorder
+import com.example.screensnap.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
+import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -81,12 +82,15 @@ class ScreenRecorderService : Service() {
 
     private fun createScreenRecorder(): ScreenRecorder {
 //        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
-        val tempVideoFile = File(cacheDir, "ScreenSnapTemp.mp4")
+        val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo.mp4")
+        val tempAudioFile = File(cacheDir, "ScreenSnapTempAudio.mp4")
+        val recorderConfigValues = RecorderConfigValues(screenSizeHelper)
         return ScreenRecorder(
             mediaProjection,
-            screenSizeHelper,
+            recorderConfigValues,
             contentResolver,
             tempVideoFile,
+            tempAudioFile,
         )
     }
 

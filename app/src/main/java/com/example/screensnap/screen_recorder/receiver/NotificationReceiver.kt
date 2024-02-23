@@ -1,9 +1,9 @@
-package com.example.screensnap.screenrecorder.receiver
+package com.example.screensnap.screen_recorder.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.example.screensnap.screenrecorder.services.ScreenRecorderService
+import com.example.screensnap.screen_recorder.services.ScreenRecorderService
 
 class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
