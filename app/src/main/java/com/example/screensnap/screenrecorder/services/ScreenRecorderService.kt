@@ -2,40 +2,38 @@ package com.example.screensnap.screenrecorder.services
 
 import android.app.Notification
 import android.app.Service
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
-import android.media.MediaRecorder
-import android.media.MediaRecorder.AudioSource
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
-import android.os.ParcelFileDescriptor
-import android.provider.MediaStore
-import android.util.Log
-import com.example.screensnap.presentation.home.AudioState
 import com.example.screensnap.screenrecorder.ScreenSizeHelper
+import com.example.screensnap.screenrecorder.media.ScreenRecorder
 import com.example.screensnap.screenrecorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.Objects
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
 
+//    @Inject
+//    lateinit var screenSnapDatastore: ScreenSnapDatastore
+
     // Note: Unable to inject using DI. Always NULL
     lateinit var mediaProjectionManager: MediaProjectionManager
 
-    private var mediaProjection: MediaProjection? = null
-    private var virtualDisplay: VirtualDisplay? = null
-    private var mediaRecorder: MediaRecorder? = null
-
+    private lateinit var mediaProjection: MediaProjection
     private lateinit var screenSizeHelper: ScreenSizeHelper
+    private lateinit var screenRecorder: ScreenRecorder
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
+    private val scope = CoroutineScope(singleThreadContext)
+    private lateinit var recordingJob: Job
 
     override fun onCreate() {
         mediaProjectionManager =
@@ -54,16 +52,15 @@ class ScreenRecorderService : Service() {
             createNotification()
         )
 
-        setupMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
-        try {
-            setupMediaRecorder(config)
-        } catch (e: Exception) {
-            Log.d("Girish", "onStartCommand: ${e.message}")
-        }
-        setupVirtualDisplay()
+        mediaProjection =
+            createMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
+        screenRecorder = createScreenRecorder()
 
-        startRecording()
-        return START_STICKY
+        scope.launch {
+            screenRecorder.startRecording()
+        }
+
+        return START_NOT_STICKY
     }
 
     // Notification for foreground service
@@ -76,136 +73,28 @@ class ScreenRecorderService : Service() {
             .build()
     }
 
-    private fun setupMediaRecorder(config: ScreenRecorderServiceConfig) {
-        val fileName = getFileName()
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
-            put(MediaStore.Video.Media.TITLE, fileName)
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+    private fun createMediaProjection(resultCode: Int, data: Intent) =
+        mediaProjectionManager.getMediaProjection(resultCode, data).apply {
+            registerCallback(object : MediaProjection.Callback() {}, null)
         }
-        val uri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
-            ?: throw Exception("Cannot create video file")
-        val fileDescriptor = Objects.requireNonNull<ParcelFileDescriptor?>(
-            contentResolver.openFileDescriptor(
-                uri,
-                "rw"
-            )
-        ).fileDescriptor
 
+    private fun createScreenRecorder() =
+//        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
+        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver)
 
-        mediaRecorder = MediaRecorder().apply {
-//           Video
-            setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setAudioSource(AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setVideoEncodingBitRate(5 * screenSizeHelper.screenWidth * screenSizeHelper.screenHeight)
-            setVideoEncoder(MediaRecorder.VideoEncoder.H264)  //after setOutputFormat()
-            setVideoSize(
-                screenSizeHelper.screenWidth,
-                screenSizeHelper.screenHeight
-            ) //after setVideoSource(), setOutFormat()
-            setVideoFrameRate(60) //after setVideoSource(), setOutFormat()
-
-            setOutputFile(fileDescriptor)
-//          Audio
-            if (config.audioState != AudioState.Off) {
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setAudioEncodingBitRate(128000)
-                setAudioSamplingRate(44100)
-            }
-
-//          Listeners
-            setOnErrorListener { mediaRecorder, what, extra ->
-                Log.d("Girish", "OnErrorListener: what=$what extra=$extra")
-            }
-            setOnInfoListener { mediaRecorder, what, extra ->
-                Log.d("Girish", "OnInfoListener: what=$what extra=$extra")
-            }
-
-            try {
-                prepare()
-            } catch (e: IOException) {
-                Log.d("Girish", "MediaRecorder.prepare() failed")
-            }
-        }
-    }
-
-    private fun setupMediaProjection(resultCode: Int, data: Intent) {
-        mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data)
-        mediaProjection?.registerCallback(object : MediaProjection.Callback() {
-            override fun onStop() {
-                super.onStop()
-                // TODO: release resources
-            }
-        }, null)
-    }
-
-    private fun setupVirtualDisplay() {
-        virtualDisplay = mediaProjection?.createVirtualDisplay(
-            "ScreenSnapVirtualDisplay",
-            screenSizeHelper.screenWidth,
-            screenSizeHelper.screenHeight,
-            screenSizeHelper.screenDensity,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            mediaRecorder?.surface,
-            null,
-            null
-        )
-    }
-
-    private fun startRecording() {
-        try {
-            mediaRecorder?.start()
-            Log.d("Girish", "startRecording: Recording started")
-        } catch (e: Exception) {
-            Log.d("Girish", "startRecording: " + e.message)
-        }
-    }
-
-    private fun stopRecording() {
-        try {
-            mediaRecorder?.stop()
-            stopSelf()
-        } catch (e: Exception) {
-            Log.d("Girish", "stopRecording: " + e.stackTrace)
-        }
-    }
 
     override fun onDestroy() {
-        // Teardown VirtualDisplay
-        virtualDisplay?.release()
-        virtualDisplay = null
-
-        // Teardown MediaRecorder
-        stopRecording()
-        mediaRecorder?.release()
-        mediaRecorder = null
-
-        // Teardown MediaProjection
-        mediaProjection?.stop()
-        mediaProjection = null
+        super.onDestroy()
+        screenRecorder.stopRecording()
+        mediaProjection.stop()
     }
-
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    private fun getFileName(): String {
-        val formatter = SimpleDateFormat(
-            "yyyy-MM-dd-HH-mm-ss",
-            Locale.getDefault()
-        )
-        val curDate = Date(System.currentTimeMillis())
-        val curTime = formatter.format(curDate).replace(" ", "")
-        return "ScreenSnap$curTime.mp4"
-    }
 
     companion object {
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID = "Screen_Snap_Channel_ID"
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME = "Screen Snap"
         const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION =
             "To show notifications for Screen Snap"
-
     }
-
 }

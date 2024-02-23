@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.screenrecorder.Video
 import com.example.screensnap.screenrecorder.services.ScreenRecorderService
 import com.example.screensnap.screenrecorder.services.ScreenRecorderServiceConfig
@@ -26,8 +27,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val mediaProjectionManager: MediaProjectionManager,
     private val app: Application,
+    private val mediaProjectionManager: MediaProjectionManager,
+    private val screenSnapDatastore: ScreenSnapDatastore,
 ) : ViewModel() {
 
     var state by mutableStateOf(HomeScreenState())
@@ -49,7 +51,10 @@ class HomeViewModel @Inject constructor(
     }
 
     init {
-        loadVideos()
+        viewModelScope.launch {
+            state = state.copy(audioState = screenSnapDatastore.getAudioState())
+            loadVideos()
+        }
     }
 
     fun onEvent(event: HomeScreenEvents) {
@@ -60,7 +65,6 @@ class HomeViewModel @Inject constructor(
                         mediaProjectionResultCode = event.mediaProjectionResultCode,
                         mediaProjectionData = event.mediaProjectionData,
                         notificationId = 1,
-                        audioState = event.audioState,
                     ).toScreenRecorderServiceIntent(app)
                 )
                 state = state.copy(
@@ -76,6 +80,9 @@ class HomeViewModel @Inject constructor(
 
             is HomeScreenEvents.OnUpdateAudioState -> {
                 state = state.copy(audioState = event.audioState)
+                viewModelScope.launch {
+                    screenSnapDatastore.saveAudioType(event.audioState.name)
+                }
             }
         }
     }
