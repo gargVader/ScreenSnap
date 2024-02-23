@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.screensnap.screenrecorder.Video
 import com.example.screensnap.screenrecorder.services.ScreenRecorderService
 import com.example.screensnap.screenrecorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,18 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
-
-// Need the READ_EXTERNAL_STORAGE permission if accessing video files that your
-// app didn't create.
-
-// Container for information about each video.
-data class Video(
-    val uri: Uri,
-    val name: String,
-    val duration: Int,
-    val size: Int
-)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
