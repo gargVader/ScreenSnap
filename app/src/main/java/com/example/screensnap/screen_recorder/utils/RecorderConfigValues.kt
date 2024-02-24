@@ -3,8 +3,13 @@ package com.example.screensnap.screen_recorder.utils
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaFormat
+import android.media.MediaMuxer
 import android.media.MediaRecorder
 
+/**
+ * Configuration values for the [MediaRecorder] and [SystemAudioRecorder].
+ * These are pre defined values that are different from Datastore values.
+ */
 class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
 
     /** Screen dimensions */
@@ -24,9 +29,13 @@ class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
 
     val mediaRecorderOutputFormat = MediaRecorder.OutputFormat.THREE_GPP
 
-    /** Settings for AudioFormat in [SystemAudioRecorder] */
-    // TODO
+    /** Settings for AudioFormat in [AudioRecorder] */
+    val audioFormatEncoding = AudioFormat.ENCODING_PCM_16BIT
+    val audioFormatSampleRate = 44100 // 44.1[KHz] is only setting guaranteed to be available on all devices
+    val audioFormatChannelMask = AudioFormat.CHANNEL_IN_MONO
 
+    /** Settings for [MediaMuxer] */
+    val mediaMuxerOutputFormat = MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
 
 
     val TIMEOUT = 10000L
@@ -34,10 +43,9 @@ class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
     val VIDEO_MIME_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC
     val AUDIO_MIME_TYPE = MediaFormat.MIMETYPE_AUDIO_AAC
 
-    val AUDIO_SAMPLE_RATE = 44100 // 44.1[KHz] is only setting guaranteed to be available on all devices
     val AUDIO_BITRATE = 64000 // 64 kbps
     val AUDIO_BUFFER_SIZE = AudioRecord.getMinBufferSize(
-        AUDIO_SAMPLE_RATE,
+        audioFormatSampleRate,
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
     ) // 2 * 1024 * 1024

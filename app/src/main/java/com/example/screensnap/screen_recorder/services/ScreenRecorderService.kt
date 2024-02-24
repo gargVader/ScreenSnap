@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Environment
 import android.os.IBinder
+import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
 import com.example.screensnap.screen_recorder.ScreenRecorder
 import com.example.screensnap.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
@@ -18,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import java.io.File
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
@@ -81,16 +84,33 @@ class ScreenRecorderService : Service() {
         }
 
     private fun createScreenRecorder(): ScreenRecorder {
+        val directory = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+            "ScreenSnap"
+        )
+        // Make sure the directory exists, create it if it doesn't
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+
 //        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
-        val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo.mp4")
-        val tempAudioFile = File(cacheDir, "ScreenSnapTempAudio.mp4")
+//        val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo.mp4")
+//        val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio.mp4")
+//        val tempMicAudioFile = File(cacheDir, "ScreenSnapTempMicAudio.mp4")
+
+        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo.mp4")
+        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio.mp4")
+        val tempMicAudioFile = File("${directory.absolutePath}/ScreenSnapTempMicAudio.mp4")
+
         val recorderConfigValues = RecorderConfigValues(screenSizeHelper)
         return ScreenRecorder(
-            mediaProjection,
-            recorderConfigValues,
-            contentResolver,
-            tempVideoFile,
-            tempAudioFile,
+            mediaProjection = mediaProjection,
+            config = recorderConfigValues,
+            contentResolver = contentResolver,
+            tempVideoFile = tempVideoFile,
+            tempSystemAudioFile = tempSystemAudioFile,
+            tempMicAudioFile = tempMicAudioFile,
+//            screenSnapDatastore = screenSnapDatastore,
         )
     }
 

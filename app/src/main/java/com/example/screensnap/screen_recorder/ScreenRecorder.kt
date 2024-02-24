@@ -10,7 +10,9 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
+import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.presentation.home.AudioState
+import com.example.screensnap.screen_recorder.system_audio_recorder.MicAudioRecorder
 import com.example.screensnap.screen_recorder.system_audio_recorder.SystemAudioRecorder
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Job
@@ -29,24 +31,32 @@ class ScreenRecorder(
     private val config: RecorderConfigValues,
     private val contentResolver: ContentResolver,
     private val tempVideoFile: File,
-    private val tempAudioFile: File,
+    private val tempSystemAudioFile: File,
+    private val tempMicAudioFile: File,
 //    private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
     private lateinit var mediaRecorder: MediaRecorder
-//    private lateinit var systemAudioRecorder: SystemAudioRecorder
-//    private lateinit var systemAudioRecordingJob: Job
+    private lateinit var systemAudioRecorder: SystemAudioRecorder
+    private lateinit var micAudioRecorder: MicAudioRecorder
+    private lateinit var systemAudioRecordingJob: Job
+    private lateinit var micAudioRecordingJob: Job
 
     suspend fun startRecording() {
         mediaRecorder = createMediaRecorder()
         virtualDisplay = createVirtualDisplay()
-//        systemAudioRecorder = createSystemAudioRecorder()
+        systemAudioRecorder = createSystemAudioRecorder()
+        micAudioRecorder = createMicAudioRecorder()
 
         coroutineScope {
             mediaRecorder.start()
-//            systemAudioRecordingJob = launch {
-//                systemAudioRecorder.startRecording()
-//            }
+            systemAudioRecordingJob = launch {
+                systemAudioRecorder.startRecording()
+            }
+            micAudioRecordingJob = launch {
+                micAudioRecorder.startRecording()
+            }
+
         }
     }
 
@@ -55,14 +65,16 @@ class ScreenRecorder(
         mediaRecorder.release()
         virtualDisplay.release()
 
-//        systemAudioRecordingJob.cancel()
+        systemAudioRecordingJob.cancel()
+        micAudioRecordingJob.cancel()
     }
 
     private suspend fun createMediaRecorder(): MediaRecorder {
 
-        val fileDescriptor = createOutputFile()
+//        val fileDescriptor = createOutputFile()
+        // TODO: Get audio state from datastore
 //        val audioState = screenSnapDatastore.getAudioState()
-        val audioState: AudioState = AudioState.MicOnly
+        val audioState: AudioState = AudioState.Mute
         return MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -114,7 +126,10 @@ class ScreenRecorder(
     )
 
     private fun createSystemAudioRecorder() =
-        SystemAudioRecorder(config, mediaProjection, tempAudioFile)
+        SystemAudioRecorder(config, tempSystemAudioFile, mediaProjection).apply { setup() }
+
+    private fun createMicAudioRecorder() =
+        MicAudioRecorder(config, tempMicAudioFile).apply { setup() }
 
     private fun createOutputFile(): FileDescriptor {
         val fileName = createFileName()

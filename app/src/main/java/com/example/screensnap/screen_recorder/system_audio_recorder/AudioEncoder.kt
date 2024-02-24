@@ -19,7 +19,7 @@ class AudioEncoder(
     private val bufferInfo = MediaCodec.BufferInfo()
     private val TAG = "Girish"
 
-    val presentationTimeUs: Long
+    private val presentationTimeUs: Long
         get() = System.nanoTime() / 1000
 
     init {
@@ -34,7 +34,7 @@ class AudioEncoder(
     private fun createFormat() =
         MediaFormat.createAudioFormat(
             config.AUDIO_MIME_TYPE,
-            config.AUDIO_SAMPLE_RATE,
+            config.audioFormatSampleRate,
             1
         ).apply {
             setInteger(
