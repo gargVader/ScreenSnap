@@ -98,9 +98,9 @@ class ScreenRecorderService : Service() {
 //        val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio.mp4")
 //        val tempMicAudioFile = File(cacheDir, "ScreenSnapTempMicAudio.mp4")
 
-        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo.mp4")
-        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio.mp4")
-        val tempMicAudioFile = File("${directory.absolutePath}/ScreenSnapTempMicAudio.mp4")
+        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
+        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
+        val tempMicAudioFile = File("${directory.absolutePath}/ScreenSnapTempMicAudio${System.currentTimeMillis()}.mp4")
 
         val recorderConfigValues = RecorderConfigValues(screenSizeHelper)
         return ScreenRecorder(
