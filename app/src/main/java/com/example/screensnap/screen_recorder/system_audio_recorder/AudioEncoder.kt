@@ -59,6 +59,7 @@ class AudioEncoder(
                 readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
             }
         } finally {
+            addEndOfStreamFlag()
             encoder.stop()
             encoder.release()
         }
@@ -74,10 +75,9 @@ class AudioEncoder(
             inputBuffer.clear()
 
             val byteArray = ByteArray(inputBuffer.capacity())
-//                val bytesRead = audioRecord.read(byteArray, 0, byteArray.size)
             val bytesRead = onInputBufferAvailable(byteArray)
 
-            Log.d(TAG, "AudioEncoder writeToEncoder bytesRead=$bytesRead")
+            Log.d(TAG, "AudioEncoder writeToEncoder bytesArray=${byteArray.joinToString()}")
             if (bytesRead > 0) {
                 inputBuffer.put(byteArray, 0, bytesRead)
                 encoder.queueInputBuffer(inputBufferIdx, 0, bytesRead, presentationTimeUs, 0)
@@ -89,6 +89,15 @@ class AudioEncoder(
                 )
             }
         }
+    }
+
+    private fun addEndOfStreamFlag(){
+        Log.d(TAG, "addEndOfStreamFlag: ")
+        val inputBufferIdx = encoder.dequeueInputBuffer(config.TIMEOUT)
+        encoder.queueInputBuffer(
+            inputBufferIdx, 0, 0, presentationTimeUs,
+            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+        )
     }
 
     private suspend fun readFromEncoder(
