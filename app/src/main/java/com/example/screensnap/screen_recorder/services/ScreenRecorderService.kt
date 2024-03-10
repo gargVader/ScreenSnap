@@ -8,6 +8,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Environment
 import android.os.IBinder
+import android.util.Log
 import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
 import com.example.screensnap.screen_recorder.ScreenRecorder
@@ -94,22 +95,25 @@ class ScreenRecorderService : Service() {
         }
 
 //        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
-//        val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo.mp4")
-//        val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio.mp4")
+        val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
+        val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
 //        val tempMicAudioFile = File(cacheDir, "ScreenSnapTempMicAudio.mp4")
 
-        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
-        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
-        val tempMicAudioFile = File("${directory.absolutePath}/ScreenSnapTempMicAudio${System.currentTimeMillis()}.mp4")
+//        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
+//        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
+        val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
+
 
         val recorderConfigValues = RecorderConfigValues(screenSizeHelper)
+        // log paths of all files
+
         return ScreenRecorder(
             mediaProjection = mediaProjection,
             config = recorderConfigValues,
             contentResolver = contentResolver,
             tempVideoFile = tempVideoFile,
             tempSystemAudioFile = tempSystemAudioFile,
-            tempMicAudioFile = tempMicAudioFile,
+            finalFile = finalFile,
 //            screenSnapDatastore = screenSnapDatastore,
         )
     }
@@ -117,7 +121,9 @@ class ScreenRecorderService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        screenRecorder.stopRecording()
+        scope.launch {
+            screenRecorder.stopRecording()
+        }
         mediaProjection.stop()
     }
 

@@ -112,7 +112,7 @@ class AudioEncoder(
 
             // Triggered only for the very first time
             MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-                Log.d(TAG, "AudioEncoder readFromEncoder: INFO_OUTPUT_FORMAT_CHANGED")
+//                Log.d(TAG, "AudioEncoder readFromEncoder: INFO_OUTPUT_FORMAT_CHANGED")
                 onOutputFormatChanged(encoder.outputFormat)
             }
 
@@ -120,10 +120,10 @@ class AudioEncoder(
                 val outputBuffer = encoder.getOutputBuffer(outputBufferIdx) ?: return
                 if (bufferInfo.size > 0) {
                     if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
-                        Log.d(
-                            TAG, "AudioEncoder readFromEncoder: OutputBufferAvailable " +
-                                    "size=${bufferInfo.size}, offset=${bufferInfo.offset}, "
-                        )
+//                        Log.d(
+//                            TAG, "AudioEncoder readFromEncoder: OutputBufferAvailable " +
+//                                    "size=${bufferInfo.size}, offset=${bufferInfo.offset}, "
+//                        )
                         onOutputBufferAvailable(outputBuffer, bufferInfo)
                     }
                 }

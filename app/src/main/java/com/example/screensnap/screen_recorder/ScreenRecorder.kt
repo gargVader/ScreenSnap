@@ -16,6 +16,7 @@ import com.example.screensnap.screen_recorder.system_audio_recorder.SystemAudioR
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileDescriptor
@@ -31,7 +32,7 @@ class ScreenRecorder(
     private val contentResolver: ContentResolver,
     private val tempVideoFile: File,
     private val tempSystemAudioFile: File,
-    private val tempMicAudioFile: File,
+    private val finalFile: File,
 //    private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
@@ -52,12 +53,27 @@ class ScreenRecorder(
         }
     }
 
-    fun stopRecording() {
+    suspend fun stopRecording() {
         mediaRecorder.stop()
         mediaRecorder.release()
         virtualDisplay.release()
 
         systemAudioRecordingJob.cancel()
+
+        coroutineScope {
+            launch {
+                val audioState: AudioState = AudioState.MicAndSystem()
+                if (audioState is AudioState.MicAndSystem) {
+                    // mix audio
+                    delay(2000)
+                    MixingTool.mux(
+                        audioFile = tempSystemAudioFile,
+                        videoFile = tempVideoFile,
+                        outFile = finalFile,
+                    )
+                }
+            }
+        }
     }
 
     private suspend fun createMediaRecorder(): MediaRecorder {
@@ -100,7 +116,7 @@ class ScreenRecorder(
             try {
                 prepare()
             } catch (e: IOException) {
-                Log.d("Girish", "MediaRecorder.prepare() failed")
+                Log.d("Girish", "MediaRecorder.prepare() failed ${e.message}")
             }
         }
     }
