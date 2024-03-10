@@ -69,7 +69,7 @@ class AudioEncoder(
         onInputBufferAvailable: (byteArray: ByteArray) -> Int,
     ) {
         val inputBufferIdx = encoder.dequeueInputBuffer(config.TIMEOUT)
-        Log.d(TAG, "AudioEncoder writeToEncoder inputBufferIdx=$inputBufferIdx")
+//        Log.d(TAG, "AudioEncoder writeToEncoder inputBufferIdx=$inputBufferIdx")
         if (inputBufferIdx >= 0) {
             val inputBuffer = encoder.getInputBuffer(inputBufferIdx)!!
             inputBuffer.clear()
@@ -77,7 +77,7 @@ class AudioEncoder(
             val byteArray = ByteArray(inputBuffer.capacity())
             val bytesRead = onInputBufferAvailable(byteArray)
 
-            Log.d(TAG, "AudioEncoder writeToEncoder bytesArray=${byteArray.joinToString()}")
+//            Log.d(TAG, "AudioEncoder writeToEncoder bytesArray=${byteArray.joinToString()}")
             if (bytesRead > 0) {
                 inputBuffer.put(byteArray, 0, bytesRead)
                 encoder.queueInputBuffer(inputBufferIdx, 0, bytesRead, presentationTimeUs, 0)

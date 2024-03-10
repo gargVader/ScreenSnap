@@ -48,9 +48,5 @@ class RecorderConfigValues(screenSizeHelper: ScreenSizeHelper) {
         audioFormatSampleRate,
         AudioFormat.CHANNEL_IN_MONO,
         AudioFormat.ENCODING_PCM_16BIT
-    ) // 2 * 1024 * 1024
-
-    val colorFormat = 2130708361
-    val frameRate = 163 // 30 fps
-    val iFrameInterval = 5 // 10 seconds between I-frames
+    ) // 2 * 1024
 }
