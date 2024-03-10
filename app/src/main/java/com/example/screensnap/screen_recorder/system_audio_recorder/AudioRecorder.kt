@@ -43,6 +43,8 @@ abstract class AudioRecorder(
         } finally {
             audioRecord.stop()
             audioRecord.release()
+            mediaMuxer.stop()
+            mediaMuxer.release()
         }
     }
 
