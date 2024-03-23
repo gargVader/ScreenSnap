@@ -1,29 +1,38 @@
 package com.example.screensnap.presentation.elements
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.example.screensnap.presentation.Video
 
-@Composable
-fun RecordingsList(videos: List<Video>?) {
+@OptIn(ExperimentalFoundationApi::class)
+fun LazyListScope.recordingList(videos: List<Video>?) {
     when {
-        videos == null -> CircularProgressIndicator()
-
-        videos.isEmpty() -> Text(text = "No rec. Record videos now")
-
-        else -> LazyColumn {
-            items(videos) { video ->
-                Row {
-                    Text(text = video.name)
-//                    val bitmap =
-//                        context.contentResolver.loadThumbnail(video.uri, Size(640, 480), null)
-//                    Image(bitmap = bitmap.asImageBitmap(), contentDescription = null)
-                }
+        videos == null -> item {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
+        }
+
+        videos.isEmpty() -> item {
+            Text(text = "No rec. Record videos now")
+        }
+
+        else -> items(videos) { video ->
+            Recording(
+                video = video,
+                modifier = Modifier.animateItemPlacement(tween(durationMillis = 250))
+            )
         }
     }
 }

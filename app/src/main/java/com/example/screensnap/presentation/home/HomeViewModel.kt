@@ -20,6 +20,7 @@ import com.example.screensnap.screen_recorder.services.ScreenRecorderService
 import com.example.screensnap.screen_recorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -141,15 +142,15 @@ class HomeViewModel @Inject constructor(
                 val nameColumn =
                     cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
                 val durationColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+                    cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION)
+                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.SIZE)
 
                 while (cursor.moveToNext()) {
                     // Get values of columns for a given video.
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
-                    val duration = cursor.getInt(durationColumn)
-                    val size = cursor.getInt(sizeColumn)
+                    val duration = cursor.getLong(durationColumn)
+                    val size = cursor.getLong(sizeColumn)
 
                     val contentUri: Uri = ContentUris.withAppendedId(
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
