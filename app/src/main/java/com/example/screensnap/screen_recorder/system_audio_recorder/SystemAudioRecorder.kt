@@ -6,7 +6,6 @@ import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioRecord
 import android.media.projection.MediaProjection
 import android.os.Build
-import android.util.Log
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import java.io.File
 
@@ -20,7 +19,7 @@ class SystemAudioRecorder(
     override fun createAudioRecord(): AudioRecord = AudioRecord.Builder().apply {
         setAudioFormat(createAudioFormat())
 
-        Log.d("Girish", "createAudioRecord: config=${config}, buffersize=${config.AUDIO_BUFFER_SIZE}")
+//        Log.d("Girish", "createAudioRecord: config=${config}, buffersize=${config.AUDIO_BUFFER_SIZE}")
         setBufferSizeInBytes(config.AUDIO_BUFFER_SIZE)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

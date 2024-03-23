@@ -3,12 +3,7 @@ package com.example.screensnap.screen_recorder
 import android.annotation.SuppressLint
 import android.media.MediaCodec
 import android.media.MediaExtractor
-import android.media.MediaFormat
 import android.media.MediaMuxer
-import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.ByteBuffer
 
@@ -108,5 +103,9 @@ object MixingTool {
         audioFile.delete()
         videoFile.delete()
     }
-
 }
+/**
+ * TODO:
+ * 1. Convert to class and improve to avoid code duplication
+ * 2. Fix issue where the app crashes when the user closes app soon after recording
+ */

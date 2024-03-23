@@ -12,7 +12,6 @@ import android.provider.MediaStore
 import android.util.Log
 import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.presentation.home.AudioState
-import com.example.screensnap.screen_recorder.system_audio_recorder.MicAudioRecorder
 import com.example.screensnap.screen_recorder.system_audio_recorder.SystemAudioRecorder
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Job
@@ -41,7 +40,10 @@ class ScreenRecorder(
     private lateinit var systemAudioRecorder: SystemAudioRecorder
     private lateinit var systemAudioRecordingJob: Job
 
+    private lateinit var audioState: AudioState
+
     suspend fun startRecording() {
+        audioState = screenSnapDatastore.getAudioState()
         mediaRecorder = createMediaRecorder()
         virtualDisplay = createVirtualDisplay()
         systemAudioRecorder = createSystemAudioRecorder()
@@ -63,7 +65,6 @@ class ScreenRecorder(
 
         coroutineScope {
             launch {
-                val audioState: AudioState = AudioState.MicAndSystem()
                 if (audioState is AudioState.MicAndSystem) {
                     // mix audio
                     delay(2000)
@@ -77,10 +78,7 @@ class ScreenRecorder(
         }
     }
 
-    private suspend fun createMediaRecorder(): MediaRecorder {
-
-//        val fileDescriptor = createOutputFile()
-        val audioState = screenSnapDatastore.getAudioState()
+    private fun createMediaRecorder(): MediaRecorder {
         return MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)

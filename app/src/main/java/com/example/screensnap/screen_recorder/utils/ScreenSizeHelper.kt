@@ -1,15 +1,19 @@
 package com.example.screensnap.screen_recorder.utils
 
-import android.content.Context
+import android.app.Application
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.media.CamcorderProfile
 import android.os.Build
 import android.util.DisplayMetrics
 import android.view.WindowManager
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.math.abs
 
-class ScreenSizeHelper constructor(
-    private val context: Context
+@Singleton
+class ScreenSizeHelper @Inject constructor(
+    private val app: Application,
+    private val windowManager: WindowManager,
 ) {
 
     var screenWidth = -1
@@ -18,9 +22,7 @@ class ScreenSizeHelper constructor(
         private set
     var screenDensity = -1
         private set
-    var cameraFrameRate = -1
-        private set
-
+    private var cameraFrameRate = -1
 
     init {
         computeRecordingInfo()
@@ -32,20 +34,19 @@ class ScreenSizeHelper constructor(
         var displayDensity = 0
         var isLandscape = false
 
-        val wm: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val rect = wm.currentWindowMetrics.bounds
+            val rect = windowManager.currentWindowMetrics.bounds
             displayWidth = abs(rect.width())
             displayHeight = abs(rect.height())
-            displayDensity = context.resources.configuration.densityDpi
+            displayDensity = app.resources.configuration.densityDpi
         } else {
             val displayMetrics = DisplayMetrics()
-            wm.defaultDisplay.getRealMetrics(displayMetrics)
+            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
             displayWidth = displayMetrics.widthPixels
             displayHeight = displayMetrics.heightPixels
             displayDensity = displayMetrics.densityDpi
         }
-        isLandscape = (context.resources.configuration.orientation == ORIENTATION_LANDSCAPE)
+        isLandscape = (app.resources.configuration.orientation == ORIENTATION_LANDSCAPE)
 
         val camcorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         val cameraWidth = camcorderProfile?.videoFrameWidth ?: -1

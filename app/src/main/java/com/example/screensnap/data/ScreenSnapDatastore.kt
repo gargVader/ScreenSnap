@@ -11,7 +11,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.screensnap.presentation.home.AudioState
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
-import javax.inject.Singleton
 
 // Datastore for all settings and preferences
 interface ScreenSnapDatastore {

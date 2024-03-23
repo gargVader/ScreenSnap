@@ -11,11 +11,9 @@ import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.screen_recorder.ScreenRecorder
 import com.example.screensnap.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
-import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import java.io.File
@@ -24,27 +22,18 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
 
-    @Inject
-    lateinit var screenSnapDatastore: ScreenSnapDatastore
-
-    @Inject
-    lateinit var mediaProjectionManager: MediaProjectionManager
+    @Inject lateinit var screenSnapDatastore: ScreenSnapDatastore
+    @Inject lateinit var mediaProjectionManager: MediaProjectionManager
+    @Inject lateinit var recorderConfigValues: RecorderConfigValues
 
     private lateinit var mediaProjection: MediaProjection
-    private lateinit var screenSizeHelper: ScreenSizeHelper
     private lateinit var screenRecorder: ScreenRecorder
 
     @OptIn(DelicateCoroutinesApi::class)
     private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
     private val scope = CoroutineScope(singleThreadContext)
-    private lateinit var recordingJob: Job
-
-    override fun onCreate() {
-        super.onCreate()
-    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        screenSizeHelper = ScreenSizeHelper(this)
 
         // Extract info
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent!!)
@@ -91,20 +80,12 @@ class ScreenRecorderService : Service() {
             directory.mkdirs()
         }
 
-//        ScreenRecorder
-//
-//        (mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
         val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
         val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
-//        val tempMicAudioFile = File(cacheDir, "ScreenSnapTempMicAudio.mp4")
 
 //        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
 //        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
         val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
-
-
-        val recorderConfigValues = RecorderConfigValues(screenSizeHelper)
-        // log paths of all files
 
         return ScreenRecorder(
             mediaProjection = mediaProjection,
