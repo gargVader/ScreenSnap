@@ -42,7 +42,7 @@ object MixingTool {
 
         // Prepare buffer for copying
         val maxChunkSize = 1024 * 1024
-        val buffer = ByteBuffer.allocate(maxChunkSize)
+        var buffer = ByteBuffer.allocate(maxChunkSize)
         val bufferInfo = MediaCodec.BufferInfo()
 
         // Copy Video
@@ -108,4 +108,5 @@ object MixingTool {
         audioFile.delete()
         videoFile.delete()
     }
+
 }

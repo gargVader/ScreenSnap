@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
+import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.presentation.home.AudioState
 import com.example.screensnap.screen_recorder.system_audio_recorder.MicAudioRecorder
 import com.example.screensnap.screen_recorder.system_audio_recorder.SystemAudioRecorder
@@ -33,7 +34,7 @@ class ScreenRecorder(
     private val tempVideoFile: File,
     private val tempSystemAudioFile: File,
     private val finalFile: File,
-//    private val screenSnapDatastore: ScreenSnapDatastore,
+    private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
     private lateinit var mediaRecorder: MediaRecorder
@@ -79,9 +80,7 @@ class ScreenRecorder(
     private suspend fun createMediaRecorder(): MediaRecorder {
 
 //        val fileDescriptor = createOutputFile()
-        // TODO: Get audio state from datastore
-//        val audioState = screenSnapDatastore.getAudioState()
-        val audioState: AudioState = AudioState.MicOnly
+        val audioState = screenSnapDatastore.getAudioState()
         return MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)

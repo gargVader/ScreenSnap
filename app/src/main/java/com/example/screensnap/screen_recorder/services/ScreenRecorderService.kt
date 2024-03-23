@@ -2,18 +2,16 @@ package com.example.screensnap.screen_recorder.services
 
 import android.app.Notification
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Environment
 import android.os.IBinder
-import android.util.Log
 import com.example.screensnap.data.ScreenSnapDatastore
-import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
 import com.example.screensnap.screen_recorder.ScreenRecorder
 import com.example.screensnap.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
+import com.example.screensnap.screen_recorder.utils.ScreenSizeHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -26,10 +24,10 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
 
-//    @Inject
-//    lateinit var screenSnapDatastore: ScreenSnapDatastore
+    @Inject
+    lateinit var screenSnapDatastore: ScreenSnapDatastore
 
-    // Note: Unable to inject using DI. Always NULL
+    @Inject
     lateinit var mediaProjectionManager: MediaProjectionManager
 
     private lateinit var mediaProjection: MediaProjection
@@ -42,8 +40,7 @@ class ScreenRecorderService : Service() {
     private lateinit var recordingJob: Job
 
     override fun onCreate() {
-        mediaProjectionManager =
-            getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        super.onCreate()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -94,7 +91,9 @@ class ScreenRecorderService : Service() {
             directory.mkdirs()
         }
 
-//        ScreenRecorder(mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
+//        ScreenRecorder
+//
+//        (mediaProjection, screenSizeHelper, contentResolver, screenSnapDatastore)
         val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
         val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
 //        val tempMicAudioFile = File(cacheDir, "ScreenSnapTempMicAudio.mp4")
@@ -114,7 +113,7 @@ class ScreenRecorderService : Service() {
             tempVideoFile = tempVideoFile,
             tempSystemAudioFile = tempSystemAudioFile,
             finalFile = finalFile,
-//            screenSnapDatastore = screenSnapDatastore,
+            screenSnapDatastore = screenSnapDatastore,
         )
     }
 

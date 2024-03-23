@@ -14,10 +14,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 // Datastore for all settings and preferences
-//@Singleton
-class ScreenSnapDatastore @Inject constructor(
+interface ScreenSnapDatastore {
+    suspend fun saveAudioType(value: String)
+    suspend fun getAudioType(default: String = AudioState.Mute.name): String
+    suspend fun saveMicPercentage(value: Int)
+    suspend fun getMicPercentage(default: Int = 100): Int
+    suspend fun saveSystemPercentage(value: Int)
+    suspend fun getSystemPercentage(default: Int = 100): Int
+    suspend fun getAudioState(): AudioState
+}
+
+class ScreenSnapDatastoreImpl @Inject constructor(
     private val app: Application
-) {
+): ScreenSnapDatastore {
 
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -28,19 +37,19 @@ class ScreenSnapDatastore @Inject constructor(
     private val systemPercentageKey = intPreferencesKey("system_percentage")
 
     /** Getters and setters */
-    suspend fun saveAudioType(value: String) = app.dataStore.set(audioTypeKey, value)
-    suspend fun getAudioType(default: String = AudioState.Mute.name) =
+    override suspend fun saveAudioType(value: String) = app.dataStore.set(audioTypeKey, value)
+    override suspend fun getAudioType(default: String) =
         app.dataStore.get(audioTypeKey, default)
 
-    suspend fun saveMicPercentage(value: Int) = app.dataStore.set(micPercentageKey, value)
-    suspend fun getMicPercentage(default: Int = 100) = app.dataStore.get(micPercentageKey, default)
+    override suspend fun saveMicPercentage(value: Int) = app.dataStore.set(micPercentageKey, value)
+    override suspend fun getMicPercentage(default: Int) = app.dataStore.get(micPercentageKey, default)
 
-    suspend fun saveSystemPercentage(value: Int) = app.dataStore.set(systemPercentageKey, value)
-    suspend fun getSystemPercentage(default: Int = 100) =
+    override suspend fun saveSystemPercentage(value: Int) = app.dataStore.set(systemPercentageKey, value)
+    override suspend fun getSystemPercentage(default: Int) =
         app.dataStore.get(systemPercentageKey, default)
 
     /** Utils */
-    suspend fun getAudioState() = when (getAudioType()) {
+    override suspend fun getAudioState() = when (getAudioType()) {
         AudioState.Mute.name -> AudioState.Mute
         AudioState.MicOnly.name -> AudioState.MicOnly
         AudioState.SystemOnly.name -> AudioState.SystemOnly

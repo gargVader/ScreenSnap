@@ -4,6 +4,9 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import android.media.projection.MediaProjectionManager
+import com.example.screensnap.data.ScreenSnapDatastore
+import com.example.screensnap.data.ScreenSnapDatastoreImpl
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,18 +15,24 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule {
+abstract class AppModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideMediaProjectionManager(app: Application): MediaProjectionManager {
-        return app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-    }
+    abstract fun bindScreenSnapDatastore(screenSnapDatastoreImpl: ScreenSnapDatastoreImpl):
+            ScreenSnapDatastore
 
-    @Provides
-    @Singleton
-    fun provideNotificationManager(app: Application): NotificationManager {
-        return app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    }
+    companion object {
+        @Provides
+        @Singleton
+        fun provideMediaProjectionManager(app: Application): MediaProjectionManager {
+            return app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        }
 
+        @Provides
+        @Singleton
+        fun provideNotificationManager(app: Application): NotificationManager {
+            return app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        }
+    }
 }
