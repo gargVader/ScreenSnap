@@ -38,7 +38,7 @@ class ScreenRecorder(
     private lateinit var virtualDisplay: VirtualDisplay
     private lateinit var mediaRecorder: MediaRecorder
     private lateinit var systemAudioRecorder: SystemAudioRecorder
-    private lateinit var systemAudioRecordingJob: Job
+    private var systemAudioRecordingJob: Job? = null
 
     private lateinit var audioState: AudioState
 
@@ -46,12 +46,17 @@ class ScreenRecorder(
         audioState = screenSnapDatastore.getAudioState()
         mediaRecorder = createMediaRecorder()
         virtualDisplay = createVirtualDisplay()
-        systemAudioRecorder = createSystemAudioRecorder()
+        if (audioState.shouldRecordSystemAudio()) {
+            systemAudioRecorder = createSystemAudioRecorder()
+        }
 
         coroutineScope {
             mediaRecorder.start()
-            systemAudioRecordingJob = launch {
-                systemAudioRecorder.startRecording()
+
+            if (audioState.shouldRecordSystemAudio()){
+                systemAudioRecordingJob = launch {
+                    systemAudioRecorder.startRecording()
+                }
             }
         }
     }
@@ -61,18 +66,31 @@ class ScreenRecorder(
         mediaRecorder.release()
         virtualDisplay.release()
 
-        systemAudioRecordingJob.cancel()
+        systemAudioRecordingJob?.cancel()
 
         coroutineScope {
             launch {
-                if (audioState is AudioState.MicAndSystem) {
-                    // mix audio
-                    delay(2000)
-                    MixingTool.mux(
-                        audioFile = tempSystemAudioFile,
-                        videoFile = tempVideoFile,
-                        outFile = finalFile,
-                    )
+                delay(2000)
+                when(audioState){
+                    is AudioState.Mute, AudioState.MicOnly -> {
+                        tempVideoFile.copyTo(finalFile)
+                        tempVideoFile.delete()
+                    }
+                    is AudioState.SystemOnly -> {
+                        MixingTool.mux(
+                            audioFile = tempSystemAudioFile,
+                            videoFile = tempVideoFile,
+                            outFile = finalFile,
+                            muxSystemAudioOnly = true
+                        )
+                    }
+                    is AudioState.MicAndSystem -> {
+                        MixingTool.mux(
+                            audioFile = tempSystemAudioFile,
+                            videoFile = tempVideoFile,
+                            outFile = finalFile,
+                        )
+                    }
                 }
             }
         }
@@ -82,7 +100,7 @@ class ScreenRecorder(
         return MediaRecorder().apply {
 //           Video
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            if (audioState is AudioState.MicOnly || audioState is AudioState.MicAndSystem) {
+            if (audioState.shouldRecordMicAudio()) {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
             }
             setOutputFormat(config.mediaRecorderOutputFormat)
@@ -96,7 +114,7 @@ class ScreenRecorder(
 
             setOutputFile(tempVideoFile)
 //          Audio
-            if (audioState is AudioState.MicOnly || audioState is AudioState.MicAndSystem) {
+            if (audioState.shouldRecordMicAudio()) {
                 setAudioEncoder(config.audioEncoder)
                 setAudioEncodingBitRate(config.audioEncodingBitrate)
                 setAudioSamplingRate(config.audioSamplingRate)
