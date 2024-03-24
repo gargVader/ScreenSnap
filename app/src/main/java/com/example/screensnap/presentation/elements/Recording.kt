@@ -28,9 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.screensnap.presentation.Video
+import kotlin.math.ceil
+import kotlin.math.log
+import kotlin.math.pow
 
 @Composable
 fun Recording(video: Video, modifier: Modifier = Modifier) {
@@ -44,6 +46,14 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
     val mediaMetadataRetriever = MediaMetadataRetriever()
     mediaMetadataRetriever.setDataSource(context, video.uri)
     val bitmap2 = mediaMetadataRetriever.getFrameAtTime(1000)
+    val duration =
+        mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            ?.toLong() ?: 0L
+    val bitrate =
+        mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+            ?.toLong() ?: 0L
+    val size = (bitrate / 8L) * duration
+
 
     Row(
         modifier = modifier
@@ -78,7 +88,8 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
                         .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = video.duration.toString())
+//                    Text(text = video.duration.toString())
+                    Text(text = convertMillisToDisplayDuration(duration))
                 }
             }
 
@@ -97,7 +108,7 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
             }
             Row() {
                 Text(
-                    text = video.size.toString(),
+                    text = convertBytesToDisplaySize(size),
                     modifier = Modifier
                         .weight(1f)
                         .align(Alignment.Bottom)
@@ -110,16 +121,33 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview
-@Composable
-fun RecordingPreview() {
-//    Recording(
-//        Video(
-//            Uri.EMPTY,
-//            "content://media/external/images/media/1",
-//            1000,
-//            1000
-//        )
-//    )
+fun convertBytesToDisplaySize(size: Long): String {
+    // If size is 0, return "0 B"
+    if (size == 0L) return "0 B"
+
+    // List of size units
+    val sizeList = listOf("B", "KB", "MB", "GB", "TB")
+
+    // Calculate the power to be used in the conversion
+    val power = log(size.toDouble(), 1000.toDouble()).toInt()
+
+    // Format the result with two decimal places
+    val formattedSize = "%.2f".format(size / 1000.0.pow(power))
+
+    // Concatenate the formatted size with the appropriate unit based on the power
+    return "$formattedSize ${sizeList[power - 1]}"
+}
+
+fun convertMillisToDisplayDuration(duration: Long): String {
+    val seconds = ceil(duration.toDouble() / 1000)
+    val displaySeconds = (seconds % 60).toInt()
+    val minutes = seconds / 60
+    val displayMinutes = (minutes % 60).toInt()
+    val hours = minutes / 60
+    var result = ""
+    if (hours.toInt() !=0) result += "$hours".padStart(2, ' ') + ":"
+    result += "$displayMinutes".padStart(2, '0') + ":"
+    result += "$displaySeconds".padStart(2, '0')
+    return result
 }
 
