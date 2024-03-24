@@ -5,10 +5,11 @@ import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
-import android.os.Environment
 import android.os.IBinder
 import com.example.screensnap.data.ScreenSnapDatastore
+import com.example.screensnap.screen_recorder.RecordingState
 import com.example.screensnap.screen_recorder.ScreenRecorder
+import com.example.screensnap.screen_recorder.ScreenRecorderRepository
 import com.example.screensnap.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import com.example.screensnap.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,9 +23,17 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
 
-    @Inject lateinit var screenSnapDatastore: ScreenSnapDatastore
-    @Inject lateinit var mediaProjectionManager: MediaProjectionManager
-    @Inject lateinit var recorderConfigValues: RecorderConfigValues
+    @Inject
+    lateinit var screenSnapDatastore: ScreenSnapDatastore
+
+    @Inject
+    lateinit var mediaProjectionManager: MediaProjectionManager
+
+    @Inject
+    lateinit var recorderConfigValues: RecorderConfigValues
+
+    @Inject
+    lateinit var repository: ScreenRecorderRepository
 
     private lateinit var mediaProjection: MediaProjection
     private lateinit var screenRecorder: ScreenRecorder
@@ -49,6 +58,7 @@ class ScreenRecorderService : Service() {
         screenRecorder = createScreenRecorder()
 
         scope.launch {
+            repository.publishRecordingState(RecordingState.RecordingStart)
             screenRecorder.startRecording()
         }
 
@@ -71,21 +81,22 @@ class ScreenRecorderService : Service() {
         }
 
     private fun createScreenRecorder(): ScreenRecorder {
-        val directory = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            "ScreenSnap"
-        )
-        // Make sure the directory exists, create it if it doesn't
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
+//        val directory = File(
+//            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+//            "ScreenSnap"
+//        )
+//        // Make sure the directory exists, create it if it doesn't
+//        if (!directory.exists()) {
+//            directory.mkdirs()
+//        }
 
         val tempVideoFile = File(cacheDir, "ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
-        val tempSystemAudioFile = File(cacheDir, "ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
+        val tempSystemAudioFile =
+            File(cacheDir, "ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
 
 //        val tempVideoFile = File("${directory.absolutePath}/ScreenSnapTempVideo${System.currentTimeMillis()}.mp4")
 //        val tempSystemAudioFile = File("${directory.absolutePath}/ScreenSnapTempSystemAudio${System.currentTimeMillis()}.mp4")
-        val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
+//        val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
 
         return ScreenRecorder(
             mediaProjection = mediaProjection,
@@ -93,7 +104,7 @@ class ScreenRecorderService : Service() {
             contentResolver = contentResolver,
             tempVideoFile = tempVideoFile,
             tempSystemAudioFile = tempSystemAudioFile,
-            finalFile = finalFile,
+//            finalFile = finalFile,
             screenSnapDatastore = screenSnapDatastore,
         )
     }
@@ -102,7 +113,9 @@ class ScreenRecorderService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         scope.launch {
+            repository.publishRecordingState(RecordingState.ConversionStart)
             screenRecorder.stopRecording()
+            repository.publishRecordingState(RecordingState.ConversionComplete)
         }
         mediaProjection.stop()
     }

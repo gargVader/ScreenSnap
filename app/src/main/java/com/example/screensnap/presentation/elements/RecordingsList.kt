@@ -31,7 +31,7 @@ fun LazyListScope.recordingList(videos: List<Video>?) {
         else -> items(videos) { video ->
             Recording(
                 video = video,
-                modifier = Modifier.animateItemPlacement(tween(durationMillis = 250))
+                modifier = Modifier.animateItemPlacement()
             )
         }
     }

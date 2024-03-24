@@ -16,11 +16,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.screensnap.data.ScreenSnapDatastore
 import com.example.screensnap.presentation.Video
+import com.example.screensnap.screen_recorder.RecordingState
+import com.example.screensnap.screen_recorder.ScreenRecorderRepository
 import com.example.screensnap.screen_recorder.services.ScreenRecorderService
 import com.example.screensnap.screen_recorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -31,6 +33,7 @@ class HomeViewModel @Inject constructor(
     private val app: Application,
     private val mediaProjectionManager: MediaProjectionManager,
     private val screenSnapDatastore: ScreenSnapDatastore,
+    private val screenRecorderRepository: ScreenRecorderRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(HomeScreenState())
@@ -45,8 +48,7 @@ class HomeViewModel @Inject constructor(
 
                 override fun onChange(selfChange: Boolean, uri: Uri?) {
                     super.onChange(selfChange, uri)
-                    Log.d("Girish", "onChange: $selfChange, $uri")
-                    loadVideos()
+//                    loadVideos()
                 }
             })
     }
@@ -55,12 +57,23 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             state = state.copy(audioState = screenSnapDatastore.getAudioState())
             loadVideos()
+            screenRecorderRepository.collectRecordingState().collectLatest {
+                if (it is RecordingState.ConversionStart) {
+                    state = state.copy(isListRefreshing = true)
+                }else if(it is RecordingState.ConversionComplete){
+                    state = state.copy(isListRefreshing = false)
+                    loadVideos()
+                }
+            }
         }
     }
 
     fun onEvent(event: HomeScreenEvents) {
         when (event) {
             is HomeScreenEvents.OnStartRecord -> {
+                state = state.copy(
+                    isRecording = true
+                )
                 app.startForegroundService(
                     ScreenRecorderServiceConfig(
                         mediaProjectionResultCode = event.mediaProjectionResultCode,
@@ -68,15 +81,12 @@ class HomeViewModel @Inject constructor(
                         notificationId = 1,
                     ).toScreenRecorderServiceIntent(app)
                 )
-                state = state.copy(
-                    isRecording = true
-                )
             }
 
             is HomeScreenEvents.OnStopRecord -> {
+                state = state.copy(isRecording = false)
                 val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
                 app.stopService(screenRecorderServiceIntent)
-                state = state.copy(isRecording = false)
             }
 
             is HomeScreenEvents.OnUpdateAudioState -> {

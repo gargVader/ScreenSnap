@@ -9,9 +9,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,8 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.screensnap.presentation.elements.HomeChips
 import com.example.screensnap.presentation.elements.HomeHeader
 import com.example.screensnap.presentation.elements.RecordFab
-import com.example.screensnap.presentation.elements.recordingList
 import com.example.screensnap.presentation.elements.YourRecordingsHeader
+import com.example.screensnap.presentation.elements.recordingList
 
 @Composable
 fun HomeScreen(
@@ -55,27 +58,26 @@ fun HomeScreen(
         }
 
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
-
-        item {
-            HomeHeader()
+        HomeHeader()
+        HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
+        YourRecordingsHeader()
+        if (state.isListRefreshing){
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+        LazyColumn(
+            modifier = Modifier.padding(top = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            recordingList(state.videoList)
         }
 
-        item {
-            HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
-        }
-
-        item {
-            YourRecordingsHeader()
-        }
-
-        recordingList(state.videoList)
     }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         RecordFab(modifier = Modifier.align(Alignment.BottomEnd), isRecording = state.isRecording) {

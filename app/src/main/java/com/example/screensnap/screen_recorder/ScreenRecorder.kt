@@ -7,6 +7,7 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.net.Uri
+import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
@@ -32,7 +33,6 @@ class ScreenRecorder(
     private val contentResolver: ContentResolver,
     private val tempVideoFile: File,
     private val tempSystemAudioFile: File,
-    private val finalFile: File,
     private val screenSnapDatastore: ScreenSnapDatastore,
 ) {
     private lateinit var virtualDisplay: VirtualDisplay
@@ -70,7 +70,16 @@ class ScreenRecorder(
 
         coroutineScope {
             launch {
-                delay(2000)
+                val directory = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+                    "ScreenSnap"
+                )
+                // Make sure the directory exists, create it if it doesn't
+                if (!directory.exists()) {
+                    directory.mkdirs()
+                }
+                val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
+                delay(1000)
                 when(audioState){
                     is AudioState.Mute, AudioState.MicOnly -> {
                         tempVideoFile.copyTo(finalFile)
