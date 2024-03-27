@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
+                    ScreenSnapAppUi()
                     HomeScreen()
                 }
             }

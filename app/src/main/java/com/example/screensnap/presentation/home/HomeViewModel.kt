@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.screensnap.data.ScreenSnapDatastore
-import com.example.screensnap.presentation.Video
 import com.example.screensnap.screen_recorder.RecordingState
 import com.example.screensnap.screen_recorder.ScreenRecorderRepository
 import com.example.screensnap.screen_recorder.services.ScreenRecorderService

@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.screensnap.presentation.Video
+import com.example.screensnap.presentation.home.Video
 import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow

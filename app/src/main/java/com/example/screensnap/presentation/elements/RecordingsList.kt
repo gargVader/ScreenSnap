@@ -1,6 +1,5 @@
 package com.example.screensnap.presentation.elements
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +9,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.screensnap.presentation.Video
+import com.example.screensnap.presentation.home.Video
 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.recordingList(videos: List<Video>?) {
