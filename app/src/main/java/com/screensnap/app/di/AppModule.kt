@@ -16,28 +16,24 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
 
-    @Binds
-    @Singleton
-    abstract fun bindScreenSnapDatastore(screenSnapDatastoreImpl: com.screensnap.app.data.ScreenSnapDatastoreImpl):
-            com.screensnap.app.data.ScreenSnapDatastore
 
-    companion object {
-        @Provides
-        @Singleton
-        fun provideMediaProjectionManager(app: Application): MediaProjectionManager {
-            return app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        }
-
-        @Provides
-        @Singleton
-        fun provideNotificationManager(app: Application): NotificationManager {
-            return app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        }
-
-        @Provides
-        @Singleton
-        fun provideWindowManager(app: Application): WindowManager {
-            return app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        }
-    }
+//    companion object {
+//        @Provides
+//        @Singleton
+//        fun provideMediaProjectionManager(app: Application): MediaProjectionManager {
+//            return app.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+//        }
+//
+//        @Provides
+//        @Singleton
+//        fun provideNotificationManager(app: Application): NotificationManager {
+//            return app.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        }
+//
+//        @Provides
+//        @Singleton
+//        fun provideWindowManager(app: Application): WindowManager {
+//            return app.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+//        }
+//    }
 }

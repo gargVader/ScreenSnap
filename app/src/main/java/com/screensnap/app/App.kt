@@ -3,7 +3,7 @@ package com.screensnap.app
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import com.screensnap.app.screen_recorder.services.ScreenRecorderService
+import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -21,12 +21,12 @@ class App : Application() {
     private fun setupNotificationChannel() {
         val notificationChannel =
             NotificationChannel(
-                ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
-                ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
+                com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
+                com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
         notificationChannel.description =
-            ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION
+            com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION
         notificationManager.createNotificationChannel(notificationChannel)
     }
 }

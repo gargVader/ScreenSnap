@@ -15,10 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.screensnap.app.presentation.Video
-import com.screensnap.app.screen_recorder.RecordingState
-import com.screensnap.app.screen_recorder.ScreenRecorderRepository
-import com.screensnap.app.screen_recorder.services.ScreenRecorderService
-import com.screensnap.app.screen_recorder.services.ScreenRecorderServiceConfig
+import com.screensnap.core.datastore.ScreenSnapDatastore
+import com.screensnap.core.screen_recorder.ScreenRecorderRepository
+import com.screensnap.core.screen_recorder.services.ScreenRecorderService
+import com.screensnap.core.screen_recorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -31,7 +31,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val app: Application,
     private val mediaProjectionManager: MediaProjectionManager,
-    private val screenSnapDatastore: com.screensnap.app.data.ScreenSnapDatastore,
+    private val screenSnapDatastore: ScreenSnapDatastore,
     private val screenRecorderRepository: ScreenRecorderRepository
 ) : ViewModel() {
 
@@ -57,9 +57,9 @@ class HomeViewModel @Inject constructor(
             state = state.copy(audioState = screenSnapDatastore.getAudioState())
             loadVideos()
             screenRecorderRepository.collectRecordingState().collectLatest {
-                if (it is RecordingState.ConversionStart) {
+                if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionStart) {
                     state = state.copy(isListRefreshing = true)
-                }else if(it is RecordingState.ConversionComplete){
+                }else if(it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete){
                     state = state.copy(isListRefreshing = false)
                     loadVideos()
                 }

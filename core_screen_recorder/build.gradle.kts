@@ -1,26 +1,13 @@
 plugins {
-    id("com.android.application")
+    id("com.android.library")
     id("org.jetbrains.kotlin.android")
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
 }
 
 android {
-    namespace = "com.screensnap.app"
+    namespace = "com.screensnap.core.screen_recorder"
     compileSdk = 34
-
-    defaultConfig {
-        applicationId = "com.screensnap.app"
-        minSdk = 26
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
-    }
 
     buildTypes {
         release {
@@ -87,7 +74,6 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.28.0")
 
     // Project
-    implementation(project(":core_screen_recorder"))
     implementation(project(":core_datastore"))
 }
 

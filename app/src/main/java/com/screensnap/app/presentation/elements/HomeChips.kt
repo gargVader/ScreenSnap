@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.screensnap.app.presentation.home.AudioState
+import com.screensnap.core.datastore.AudioState
 import com.screensnap.app.presentation.home.HomeScreenEvents
 import com.screensnap.app.presentation.home.HomeViewModel
 
@@ -31,27 +31,27 @@ fun HomeChips(
     val state = viewModel.state
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
-            selected = state.audioState != AudioState.Mute,
+            selected = state.audioState != com.screensnap.core.datastore.AudioState.Mute,
             onClick = {
                 when (state.audioState) {
-                    AudioState.Mute -> {
+                    com.screensnap.core.datastore.AudioState.Mute -> {
                         if (ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.RECORD_AUDIO
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(AudioState.MicOnly))
+                            viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(com.screensnap.core.datastore.AudioState.MicOnly))
                         } else {
                             // request for permission
                             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         }
                     }
 
-                    AudioState.MicOnly -> {
-                        viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(AudioState.SystemOnly))
+                    com.screensnap.core.datastore.AudioState.MicOnly -> {
+                        viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(com.screensnap.core.datastore.AudioState.SystemOnly))
                     }
 
-                    AudioState.SystemOnly -> {
+                    com.screensnap.core.datastore.AudioState.SystemOnly -> {
                         if (ContextCompat.checkSelfPermission(
                                 context,
                                 Manifest.permission.RECORD_AUDIO
@@ -59,7 +59,7 @@ fun HomeChips(
                         ) {
                             viewModel.onEvent(
                                 HomeScreenEvents.OnUpdateAudioState(
-                                    AudioState.MicAndSystem(
+                                    com.screensnap.core.datastore.AudioState.MicAndSystem(
                                         -1,
                                         -1
                                     )
@@ -73,25 +73,25 @@ fun HomeChips(
                     }
 
                     else -> {
-                        viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(AudioState.Mute))
+                        viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(com.screensnap.core.datastore.AudioState.Mute))
                     }
                 }
             },
             label = {
                 Text(
                     text = when (state.audioState) {
-                        AudioState.Mute -> "Mute"
-                        AudioState.MicOnly -> "Mic"
-                        AudioState.SystemOnly -> "System"
+                        com.screensnap.core.datastore.AudioState.Mute -> "Mute"
+                        com.screensnap.core.datastore.AudioState.MicOnly -> "Mic"
+                        com.screensnap.core.datastore.AudioState.SystemOnly -> "System"
                         else -> "Mic & System"
                     }
                 )
             },
             leadingIcon = {
                 when (state.audioState) {
-                    AudioState.Mute -> Icon(Icons.Default.MicOff, null)
-                    AudioState.MicOnly -> Icon(Icons.Default.Mic, null)
-                    AudioState.SystemOnly -> Icon(Icons.Default.PhoneAndroid, null)
+                    com.screensnap.core.datastore.AudioState.Mute -> Icon(Icons.Default.MicOff, null)
+                    com.screensnap.core.datastore.AudioState.MicOnly -> Icon(Icons.Default.Mic, null)
+                    com.screensnap.core.datastore.AudioState.SystemOnly -> Icon(Icons.Default.PhoneAndroid, null)
                     else -> Row {
                         Icon(Icons.Default.Mic, null)
                         Icon(Icons.Default.PhoneAndroid, null)

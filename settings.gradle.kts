@@ -16,3 +16,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ScreenSnap"
 include(":app")
+include(":core_screen_recorder")
+include(":core_datastore")
