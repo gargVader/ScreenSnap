@@ -1,5 +1,6 @@
 plugins {
-    id("com.screensnap.plugins.android.application")
+    id("com.screensnap.plugin.android.application")
+    id("com.screensnap.plugin.android.application.compose")
 }
 
 android {
