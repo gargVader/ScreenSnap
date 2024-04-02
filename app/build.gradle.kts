@@ -1,5 +1,5 @@
 plugins {
-    id("com.screensnap.plugins.android_application")
+    id("com.screensnap.plugins.android.application")
 }
 
 android {
