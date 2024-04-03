@@ -15,20 +15,15 @@ dependencies {
 
 gradlePlugin{
     plugins{
-        register("androidApplication"){
-            id = "com.screensnap.plugin.android.application"
-            implementationClass = "AndroidApplicationConventionPlugin"
-        }
-
-        register("androidApplicationCompose"){
-            id = "com.screensnap.plugin.android.application.compose"
-            implementationClass = "AndroidApplicationComposeConventionPlugin"
-        }
-
-        register("androidLibraryCompose"){
-            id = "com.screensnap.plugin.library.compose"
-            implementationClass = "AndroidLibraryComposeConventionPlugin"
-        }
+//        register("androidApplicationCompose"){
+//            id = "com.screensnap.plugin.android-app-compose"
+//            implementationClass = "AndroidApplicationComposeConventionPlugin"
+//        }
+//
+//        register("androidLibraryCompose"){
+//            id = "com.screensnap.plugin.library-compose"
+//            implementationClass = "AndroidLibraryComposeConventionPlugin"
+//        }
 
     }
 }
