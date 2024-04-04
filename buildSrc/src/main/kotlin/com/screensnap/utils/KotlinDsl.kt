@@ -15,6 +15,10 @@ fun DependencyHandler.implementation(dependency: Any){
     dependsAs("implementation", dependency)
 }
 
+fun DependencyHandler.testImplementation(dependency: Any){
+    dependsAs("testImplementation", dependency)
+}
+
 fun DependencyHandler.androidTestImplementation(dependency: Any){
     dependsAs("androidTestImplementation", dependency)
 }

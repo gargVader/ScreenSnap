@@ -4,6 +4,8 @@ import com.screensnap.utils.implementation
 import com.screensnap.utils.kapt
 import org.gradle.kotlin.dsl.dependencies
 
+apply(plugin = "com.google.dagger.hilt.android")
+
 dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.44.2")
