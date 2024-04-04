@@ -3,7 +3,7 @@ package com.screensnap.core.screen_recorder.services.pendingintent
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.hbisoft.hbrecorder.NotificationReceiver
+import com.screensnap.core.screen_recorder.receiver.NotificationReceiver
 
 fun createScreenRecorderServicePendingIntent(
     context: Context,
