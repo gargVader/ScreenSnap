@@ -21,12 +21,12 @@ class App : Application() {
     private fun setupNotificationChannel() {
         val notificationChannel =
             NotificationChannel(
-                com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
-                com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
+                ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
+                ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
         notificationChannel.description =
-            com.screensnap.core.screen_recorder.services.ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION
+            ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION
         notificationManager.createNotificationChannel(notificationChannel)
     }
 }
