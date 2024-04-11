@@ -26,7 +26,7 @@ fun NavGraphBuilder.settingsScreenNavGraph(navController: NavController) {
         }
 
         composable(route = SettingsScreenDestinations.AUDIO_SETTINGS) {
-            AudioSettingsScreen()
+            AudioSettingsScreen(onBackClick = navController::popBackStack)
         }
     }
 
