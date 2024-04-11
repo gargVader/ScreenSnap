@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.elements
+package com.screensnap.feature.home.elements
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -9,7 +9,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.screensnap.app.presentation.Video
+import com.screensnap.feature.home.Video
 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.recordingList(videos: List<Video>?) {

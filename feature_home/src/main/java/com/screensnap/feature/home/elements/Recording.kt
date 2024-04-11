@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.elements
+package com.screensnap.feature.home.elements
 
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -29,7 +29,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.screensnap.app.presentation.Video
+import com.screensnap.feature.home.Video
 import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow

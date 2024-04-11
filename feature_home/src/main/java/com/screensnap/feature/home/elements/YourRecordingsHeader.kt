@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.elements
+package com.screensnap.feature.home.elements
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme

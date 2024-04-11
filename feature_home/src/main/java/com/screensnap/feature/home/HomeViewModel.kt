@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.home
+package com.screensnap.feature.home
 
 import android.app.Application
 import android.content.ContentUris
@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.screensnap.app.presentation.Video
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.screen_recorder.ScreenRecorderRepository
 import com.screensnap.core.screen_recorder.services.ScreenRecorderService

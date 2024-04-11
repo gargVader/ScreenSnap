@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation
+package com.screensnap.feature.home
 
 import android.net.Uri
 

@@ -1,7 +1,6 @@
-package com.screensnap.app.presentation.home
+package com.screensnap.feature.home
 
 import android.content.Intent
-import com.screensnap.core.datastore.AudioState
 
 sealed interface HomeScreenEvents {
     /**
@@ -15,5 +14,6 @@ sealed interface HomeScreenEvents {
     ) : HomeScreenEvents
 
     object OnStopRecord : HomeScreenEvents
-    data class OnUpdateAudioState(val audioState: com.screensnap.core.datastore.AudioState) : HomeScreenEvents
+    data class OnUpdateAudioState(val audioState: com.screensnap.core.datastore.AudioState) :
+        HomeScreenEvents
 }

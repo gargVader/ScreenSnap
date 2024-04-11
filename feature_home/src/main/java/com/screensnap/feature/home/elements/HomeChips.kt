@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.elements
+package com.screensnap.feature.home.elements
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -17,9 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.screensnap.core.datastore.AudioState
-import com.screensnap.app.presentation.home.HomeScreenEvents
-import com.screensnap.app.presentation.home.HomeViewModel
+import com.screensnap.feature.home.HomeScreenEvents
+import com.screensnap.feature.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

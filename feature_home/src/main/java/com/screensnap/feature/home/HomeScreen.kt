@@ -1,4 +1,4 @@
-package com.screensnap.app.presentation.home
+package com.screensnap.feature.home
 
 import android.app.Activity
 import android.content.Context
@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.screensnap.app.presentation.elements.HomeChips
-import com.screensnap.app.presentation.elements.HomeHeader
-import com.screensnap.app.presentation.elements.RecordFab
-import com.screensnap.app.presentation.elements.YourRecordingsHeader
-import com.screensnap.app.presentation.elements.recordingList
+import com.screensnap.feature.home.elements.HomeChips
+import com.screensnap.feature.home.elements.HomeHeader
+import com.screensnap.feature.home.elements.RecordFab
+import com.screensnap.feature.home.elements.YourRecordingsHeader
+import com.screensnap.feature.home.elements.recordingList
 
 @Composable
 fun HomeScreen(
