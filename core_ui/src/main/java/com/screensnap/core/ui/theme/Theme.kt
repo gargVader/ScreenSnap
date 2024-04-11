@@ -1,4 +1,4 @@
-package com.screensnap.app.ui.theme
+package com.screensnap.core.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme

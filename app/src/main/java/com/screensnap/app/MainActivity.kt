@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.screensnap.app.presentation.home.HomeScreen
-import com.screensnap.app.ui.theme.ScreenSnapTheme
+import com.screensnap.core.ui.theme.ScreenSnapTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
