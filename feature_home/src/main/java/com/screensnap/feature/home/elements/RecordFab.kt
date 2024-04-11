@@ -21,7 +21,6 @@ fun RecordFab(
     onClick: () -> Unit,
 ) {
     LargeFloatingActionButton(
-        modifier = modifier.padding(bottom = 34.dp, end = 24.dp, start = 24.dp),
         onClick = onClick,
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         shape = CircleShape
