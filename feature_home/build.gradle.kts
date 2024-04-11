@@ -8,7 +8,6 @@ android {
 
 dependencies {
     // Project
-    implementation(project(":core_ui"))
     implementation(project(":core_datastore"))
     implementation(project(":core_screen_recorder"))
 }

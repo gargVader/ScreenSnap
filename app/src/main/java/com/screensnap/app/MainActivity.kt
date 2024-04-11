@@ -6,8 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.screensnap.feature.home.HomeScreen
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.screensnap.core.ui.theme.ScreenSnapTheme
+import com.screensnap.domain.navigation.HomeScreenDestinations
+import com.screensnap.feature.home.nav.homeScreenNavGraph
+import com.screensnap.feature.settings.nav.settingsScreenNavGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -20,14 +24,16 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    HomeScreen()
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = HomeScreenDestinations.ROUTE
+                    ) {
+                        homeScreenNavGraph()
+                        settingsScreenNavGraph()
+                    }
                 }
             }
         }
     }
 }
-
-/*
-TODOs:
-Refer google doc
- */

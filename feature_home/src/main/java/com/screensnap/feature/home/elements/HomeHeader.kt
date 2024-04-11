@@ -11,12 +11,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun HomeHeader() {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(text = "ScreenSnap", style = MaterialTheme.typography.headlineMedium)
-        IconButton(onClick = {}) {
+        IconButton(onClick = {
+        }) {
             Icon(Icons.Default.Settings, null)
         }
     }
