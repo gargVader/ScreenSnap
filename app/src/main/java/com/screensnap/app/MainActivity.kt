@@ -29,8 +29,8 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = HomeScreenDestinations.ROUTE
                     ) {
-                        homeScreenNavGraph()
-                        settingsScreenNavGraph()
+                        homeScreenNavGraph(navController)
+                        settingsScreenNavGraph(navController)
                     }
                 }
             }

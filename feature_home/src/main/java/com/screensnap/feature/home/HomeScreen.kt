@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -30,9 +29,8 @@ import com.screensnap.feature.home.elements.recordingList
 @Composable
 fun HomeScreen(
     context: Context = LocalContext.current,
-    viewModel: HomeViewModel = hiltViewModel(
-        viewModelStoreOwner = (context as ComponentActivity)
-    ),
+    onSettingsClick: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
 
     val state = viewModel.state
@@ -63,10 +61,10 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
-        HomeHeader()
+        HomeHeader(onSettingsClick = onSettingsClick)
         HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
         YourRecordingsHeader()
-        if (state.isListRefreshing){
+        if (state.isListRefreshing) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         LazyColumn(
