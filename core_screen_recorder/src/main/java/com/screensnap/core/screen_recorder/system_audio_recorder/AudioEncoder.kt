@@ -59,7 +59,7 @@ class AudioEncoder(
                 readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
             }
         } finally {
-            addEndOfStreamFlag()
+//            addEndOfStreamFlag()
             encoder.stop()
             encoder.release()
         }
