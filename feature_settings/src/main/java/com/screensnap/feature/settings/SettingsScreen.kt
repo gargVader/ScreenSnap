@@ -1,6 +1,5 @@
 package com.screensnap.feature.settings
 
-import android.os.Environment
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,13 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
-import java.io.File
+import com.screensnap.core.datastore.AudioState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
-    onAudioSettingsClick: () -> Unit,
+    onAudioSettingsClick: (currentAudioState: AudioState) -> Unit,
     viewModel: SettingsScreenViewModel = hiltViewModel(),
 ) {
 
@@ -59,8 +58,8 @@ fun SettingsScreen(
             SettingsRowHorizontal(
                 icon = Icons.Default.Mic,
                 title = "Audio Settings",
-                currentSetting = "Microphone",
-                onClick = onAudioSettingsClick
+                currentSetting = state.audioState.displayName,
+                onClick = { onAudioSettingsClick(state.audioState) }
             )
 
             SettingsRowVertical(

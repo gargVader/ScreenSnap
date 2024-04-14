@@ -12,7 +12,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,9 +24,10 @@ class SettingsScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            val audioState = screenSnapDatastore.getAudioState()
             val locationPath = screenSnapDatastore.getLocationPath()
             withContext(Dispatchers.Main) {
-                state = state.copy(saveLocation = locationPath)
+                state = state.copy(audioState = audioState, saveLocation = locationPath)
             }
         }
     }

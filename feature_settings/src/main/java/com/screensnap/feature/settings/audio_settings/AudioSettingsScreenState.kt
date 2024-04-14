@@ -1,4 +1,7 @@
 package com.screensnap.feature.settings.audio_settings
 
-class AudioSettingsScreenState {
-}
+import com.screensnap.core.datastore.AudioState
+
+data class AudioSettingsScreenState(
+    val audioState: AudioState
+)

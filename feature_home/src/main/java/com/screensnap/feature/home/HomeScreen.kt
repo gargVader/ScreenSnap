@@ -1,8 +1,10 @@
 package com.screensnap.feature.home
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,7 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.screensnap.core.datastore.AudioState
 import com.screensnap.feature.home.elements.HomeChips
 import com.screensnap.feature.home.elements.RecordFab
 import com.screensnap.feature.home.elements.YourRecordingsHeader
@@ -65,7 +69,6 @@ internal fun HomeScreen(
             }
         }
 
-
     Scaffold(topBar = {
         TopAppBar(title = {
             Text(
@@ -83,7 +86,15 @@ internal fun HomeScreen(
                 if (state.isRecording) {
                     viewModel.onEvent(HomeScreenEvents.OnStopRecord)
                 } else {
-                    mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
+                    if (state.audioState != AudioState.Mute && ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    } else {
+                        mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
+                    }
                 }
             }
         }) { paddingValues ->

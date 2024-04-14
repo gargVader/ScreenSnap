@@ -24,7 +24,7 @@ import com.screensnap.feature.home.HomeViewModel
 @Composable
 fun HomeChips(
     viewModel: HomeViewModel,
-    audioPermissionLauncher: ManagedActivityResultLauncher<String, Boolean>
+    audioPermissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
 ) {
     val context = LocalContext.current
     val state = viewModel.state
@@ -76,21 +76,24 @@ fun HomeChips(
                     }
                 }
             },
-            label = {
-                Text(
-                    text = when (state.audioState) {
-                        com.screensnap.core.datastore.AudioState.Mute -> "Mute"
-                        com.screensnap.core.datastore.AudioState.MicOnly -> "Mic"
-                        com.screensnap.core.datastore.AudioState.SystemOnly -> "System"
-                        else -> "Mic & System"
-                    }
-                )
-            },
+            label = { Text(text = state.audioState.displayName) },
             leadingIcon = {
                 when (state.audioState) {
-                    com.screensnap.core.datastore.AudioState.Mute -> Icon(Icons.Default.MicOff, null)
-                    com.screensnap.core.datastore.AudioState.MicOnly -> Icon(Icons.Default.Mic, null)
-                    com.screensnap.core.datastore.AudioState.SystemOnly -> Icon(Icons.Default.PhoneAndroid, null)
+                    com.screensnap.core.datastore.AudioState.Mute -> Icon(
+                        Icons.Default.MicOff,
+                        null
+                    )
+
+                    com.screensnap.core.datastore.AudioState.MicOnly -> Icon(
+                        Icons.Default.Mic,
+                        null
+                    )
+
+                    com.screensnap.core.datastore.AudioState.SystemOnly -> Icon(
+                        Icons.Default.PhoneAndroid,
+                        null
+                    )
+
                     else -> Row {
                         Icon(Icons.Default.Mic, null)
                         Icon(Icons.Default.PhoneAndroid, null)

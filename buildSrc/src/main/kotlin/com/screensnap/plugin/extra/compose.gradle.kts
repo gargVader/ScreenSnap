@@ -45,4 +45,10 @@ dependencies {
 
     // Accompanist
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.28.0")
+
+    // Viewmodel utilities for compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    // Lifecycle utilites for compose
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
 }
