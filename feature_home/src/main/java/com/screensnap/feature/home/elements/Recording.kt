@@ -45,7 +45,7 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
 
     val mediaMetadataRetriever = MediaMetadataRetriever()
     mediaMetadataRetriever.setDataSource(context, video.uri)
-    val bitmap2 = mediaMetadataRetriever.getFrameAtTime(1000)
+//    val bitmap2 = mediaMetadataRetriever.getFrameAtTime(1000)
     val duration =
         mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             ?.toLong() ?: 0L
@@ -66,7 +66,7 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
         ) {
             Box() {
-                bitmap2?.let {
+                bitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
                         contentDescription = null,
