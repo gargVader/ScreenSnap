@@ -31,25 +31,11 @@ class HomeViewModel @Inject constructor(
     private val app: Application,
     private val mediaProjectionManager: MediaProjectionManager,
     private val screenSnapDatastore: ScreenSnapDatastore,
-    private val screenRecorderRepository: ScreenRecorderRepository
+    private val screenRecorderRepository: ScreenRecorderRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(HomeScreenState())
         private set
-
-    init {
-        app.contentResolver.registerContentObserver(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            true,
-            object :
-                ContentObserver(null) {
-
-                override fun onChange(selfChange: Boolean, uri: Uri?) {
-                    super.onChange(selfChange, uri)
-//                    loadVideos()
-                }
-            })
-    }
 
     init {
         viewModelScope.launch {
@@ -58,7 +44,7 @@ class HomeViewModel @Inject constructor(
             screenRecorderRepository.collectRecordingState().collectLatest {
                 if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionStart) {
                     state = state.copy(isListRefreshing = true)
-                }else if(it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete){
+                } else if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete) {
                     state = state.copy(isListRefreshing = false)
                     loadVideos()
                 }
@@ -100,10 +86,12 @@ class HomeViewModel @Inject constructor(
         return mediaProjectionManager.createScreenCaptureIntent()
     }
 
-    fun loadVideos() {
+    private fun loadVideos() {
         viewModelScope.launch {
             val videos = queryVideos()
-            state = state.copy(videoList = videos)
+            withContext(Dispatchers.Main) {
+                state = state.copy(videoList = videos)
+            }
         }
     }
 
