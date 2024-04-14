@@ -1,4 +1,5 @@
 package com.screensnap.feature.settings
 
-class SettingsScreenState {
-}
+data class SettingsScreenState(
+    val saveLocation: String = "Error while loading save path"
+)

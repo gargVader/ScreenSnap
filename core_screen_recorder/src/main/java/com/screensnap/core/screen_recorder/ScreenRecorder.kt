@@ -53,7 +53,7 @@ class ScreenRecorder(
         coroutineScope {
             mediaRecorder.start()
 
-            if (audioState.shouldRecordSystemAudio()){
+            if (audioState.shouldRecordSystemAudio()) {
                 systemAudioRecordingJob = launch {
                     systemAudioRecorder.startRecording()
                 }
@@ -70,21 +70,19 @@ class ScreenRecorder(
 
         coroutineScope {
             launch {
-                val directory = File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-                    "ScreenSnap"
-                )
-                // Make sure the directory exists, create it if it doesn't
-                if (!directory.exists()) {
-                    directory.mkdirs()
-                }
-                val finalFile = File("${directory.absolutePath}/ScreenSnapFinal${System.currentTimeMillis()}.mp4")
+                val fileName = "ScreenSnap${System.currentTimeMillis()}.mp4"
+                val directoryString = screenSnapDatastore.getLocationPath()
+                // Make sure directory exists
+                val directoryFile = File(directoryString)
+                if (!directoryFile.exists()) directoryFile.mkdirs()
+                val finalFile = File(directoryFile, fileName)
                 delay(1000)
-                when(audioState){
+                when (audioState) {
                     is AudioState.Mute, AudioState.MicOnly -> {
                         tempVideoFile.copyTo(finalFile)
                         tempVideoFile.delete()
                     }
+
                     is AudioState.SystemOnly -> {
                         MixingTool.mux(
                             audioFile = tempSystemAudioFile,
@@ -93,6 +91,7 @@ class ScreenRecorder(
                             muxSystemAudioOnly = true
                         )
                     }
+
                     is AudioState.MicAndSystem -> {
                         MixingTool.mux(
                             audioFile = tempSystemAudioFile,

@@ -1,6 +1,7 @@
 package com.screensnap.feature.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,7 +21,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SettingsRow(icon: ImageVector, title: String, currentSetting: String, onClick: () -> Unit) {
+fun SettingsRowHorizontal(
+    icon: ImageVector,
+    title: String,
+    currentSetting: String,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,12 +56,57 @@ fun SettingsRow(icon: ImageVector, title: String, currentSetting: String, onClic
     }
 }
 
+@Composable
+fun SettingsRowVertical(
+    icon: ImageVector,
+    title: String,
+    currentSetting: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            icon,
+            contentDescription = "icon",
+            modifier = Modifier
+                .padding(end = 28.dp)
+                .size(32.dp)
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = currentSetting,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.End,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun SettingsRowPreview() {
-    SettingsRow(
-        icon = Icons.Default.Mic,
-        title = "Audio Settings",
-        currentSetting = "Microphone",
-        onClick = {})
+    Column {
+        SettingsRowHorizontal(
+            icon = Icons.Default.Mic,
+            title = "Audio Settings",
+            currentSetting = "Microphone",
+            onClick = {})
+        SettingsRowVertical(
+            icon = Icons.Default.Mic,
+            title = "Audio Settings",
+            currentSetting = "Microphone",
+            onClick = {})
+    }
 }
