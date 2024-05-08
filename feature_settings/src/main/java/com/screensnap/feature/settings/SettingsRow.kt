@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -87,7 +88,6 @@ fun SettingsRowVertical(
                 text = currentSetting,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.End,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -104,9 +104,9 @@ fun SettingsRowPreview() {
             currentSetting = "Microphone",
             onClick = {})
         SettingsRowVertical(
-            icon = Icons.Default.Mic,
-            title = "Audio Settings",
-            currentSetting = "Microphone",
+            icon = Icons.Default.FolderOpen,
+            title = "Save location",
+            currentSetting = "/storage/emulated/0/Movies/ScreenSnap",
             onClick = {})
     }
 }
