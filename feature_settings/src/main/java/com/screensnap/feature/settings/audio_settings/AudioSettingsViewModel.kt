@@ -30,7 +30,7 @@ class AudioSettingsViewModel @Inject constructor(
     fun updateSelectedAudioState(newAudioState: AudioState) {
         state = state.copy(audioState = newAudioState)
         viewModelScope.launch {
-            screenSnapDatastore.saveAudioType(state.audioState.name)
+            screenSnapDatastore.saveAudioState(state.audioState)
         }
     }
 

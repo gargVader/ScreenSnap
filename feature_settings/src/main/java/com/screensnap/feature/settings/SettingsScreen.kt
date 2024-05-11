@@ -1,5 +1,6 @@
 package com.screensnap.feature.settings
 
+import android.app.Application
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,10 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.screensnap.core.datastore.AudioState
+import com.screensnap.core.datastore.ScreenSnapDatastoreImpl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,15 +70,10 @@ fun SettingsScreen(
                 icon = Icons.Default.FolderOpen,
                 title = "Save Location",
                 currentSetting = state.saveLocation
+                    ?: stringResource(R.string.save_location_error_loading)
             ) {
-                directoryPickerLauncher.launch(state.saveLocation.toUri())
+                directoryPickerLauncher.launch(state.saveLocation?.toUri())
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun SettingsScreenPreview() {
-    SettingsScreen({}, {})
 }

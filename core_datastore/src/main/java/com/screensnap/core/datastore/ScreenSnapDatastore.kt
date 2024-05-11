@@ -10,23 +10,31 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.io.File
 import javax.inject.Inject
 
 // Datastore for all settings and preferences
 interface ScreenSnapDatastore {
-    suspend fun saveAudioType(value: String)
-    suspend fun getAudioType(default: String = AudioState.Mute.name): String
+    // Audio State
+    suspend fun saveAudioState(audioState: AudioState)
+    suspend fun getAudioState(default: AudioState = AudioState.Mute): AudioState
+    fun getAudioStateFlow(): Flow<AudioState>
+
+    // Location Path
+    suspend fun saveLocationPath(path: String)
+    suspend fun getLocationPath(): String
+    fun getLocationPathFlow(): Flow<String?>
+
+    // MIC percentage
     suspend fun saveMicPercentage(value: Int)
     suspend fun getMicPercentage(default: Int = 100): Int
+
+    // System Percentage
     suspend fun saveSystemPercentage(value: Int)
     suspend fun getSystemPercentage(default: Int = 100): Int
-    suspend fun getAudioState(): AudioState
-
-    suspend fun saveLocationPath(path: String)
-
-    suspend fun getLocationPath(): String
 }
 
 class ScreenSnapDatastoreImpl @Inject constructor(
@@ -37,15 +45,45 @@ class ScreenSnapDatastoreImpl @Inject constructor(
 
     /** Keys */
     // MUTE, MIC_ONLY, SYSTEM_ONLY, MIC_AND_SYSTEM
-    private val audioTypeKey = stringPreferencesKey("audio_type")
+    private val audioStateKey = stringPreferencesKey("audio_state")
     private val micPercentageKey = intPreferencesKey("mic_percentage")
     private val systemPercentageKey = intPreferencesKey("system_percentage")
     private val locationKey = stringPreferencesKey("location_key")
 
-    /** Getters and setters */
-    override suspend fun saveAudioType(value: String) = app.dataStore.set(audioTypeKey, value)
-    override suspend fun getAudioType(default: String) =
-        app.dataStore.get(audioTypeKey, default)
+    override suspend fun saveAudioState(audioState: AudioState) =
+        app.dataStore.set(audioStateKey, audioState.name)
+
+    override suspend fun getAudioState(default: AudioState) =
+        when (app.dataStore.get(audioStateKey, default.name)) {
+            AudioState.Mute.name -> AudioState.Mute
+            AudioState.MicOnly.name -> AudioState.MicOnly
+            AudioState.SystemOnly.name -> AudioState.SystemOnly
+            else -> {
+                val micPercentage = getMicPercentage()
+                val systemPercentage = getSystemPercentage()
+                AudioState.MicAndSystem(micPercentage, systemPercentage)
+            }
+        }
+
+    override fun getAudioStateFlow(): Flow<AudioState> = app.dataStore.data.map {
+        val audioStateString = it[audioStateKey] ?: AudioState.Mute.name
+        audioStateString.toAudioState()
+    }
+
+    override suspend fun saveLocationPath(path: String) {
+        Log.d("Girish", "saveLocationPath: $path")
+        app.dataStore.set(locationKey, path)
+    }
+
+    override fun getLocationPathFlow(): Flow<String?> = app.dataStore.data.map {
+        it[locationKey]
+    }
+
+    override suspend fun getLocationPath(): String {
+        val path = app.dataStore.get(locationKey, getDefaultLocationPath())
+        Log.d("Girish", "getLocationPath: $path")
+        return path
+    }
 
     override suspend fun saveMicPercentage(value: Int) = app.dataStore.set(micPercentageKey, value)
     override suspend fun getMicPercentage(default: Int) =
@@ -56,29 +94,6 @@ class ScreenSnapDatastoreImpl @Inject constructor(
 
     override suspend fun getSystemPercentage(default: Int) =
         app.dataStore.get(systemPercentageKey, default)
-
-    /** Utils */
-    override suspend fun getAudioState() = when (getAudioType()) {
-        AudioState.Mute.name -> AudioState.Mute
-        AudioState.MicOnly.name -> AudioState.MicOnly
-        AudioState.SystemOnly.name -> AudioState.SystemOnly
-        else -> {
-            val micPercentage = getMicPercentage()
-            val systemPercentage = getSystemPercentage()
-            AudioState.MicAndSystem(micPercentage, systemPercentage)
-        }
-    }
-
-    override suspend fun saveLocationPath(path: String) {
-        Log.d("Girish", "saveLocationPath: $path")
-        app.dataStore.set(locationKey, path)
-    }
-
-    override suspend fun getLocationPath() : String{
-        val path = app.dataStore.get(locationKey, getDefaultLocationPath())
-        Log.d("Girish", "getLocationPath: $path")
-        return path
-    }
 
     private fun getDefaultLocationPath(): String {
         val directory = File(

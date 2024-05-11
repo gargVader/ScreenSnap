@@ -21,6 +21,8 @@ import com.screensnap.core.screen_recorder.services.ScreenRecorderServiceConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -39,17 +41,21 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            state = state.copy(audioState = screenSnapDatastore.getAudioState())
             loadVideos()
-            screenRecorderRepository.collectRecordingState().collectLatest {
-                if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionStart) {
-                    state = state.copy(isListRefreshing = true)
-                } else if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete) {
-                    state = state.copy(isListRefreshing = false)
-                    loadVideos()
-                }
-            }
         }
+
+        screenSnapDatastore.getAudioStateFlow().onEach {
+            state = state.copy(audioState = it)
+        }.launchIn(viewModelScope)
+
+        screenRecorderRepository.collectRecordingState().onEach {
+            if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionStart) {
+                state = state.copy(isListRefreshing = true)
+            } else if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete) {
+                state = state.copy(isListRefreshing = false)
+                loadVideos()
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onEvent(event: HomeScreenEvents) {
@@ -76,7 +82,7 @@ class HomeViewModel @Inject constructor(
             is HomeScreenEvents.OnUpdateAudioState -> {
                 state = state.copy(audioState = event.audioState)
                 viewModelScope.launch {
-                    screenSnapDatastore.saveAudioType(event.audioState.name)
+                    screenSnapDatastore.saveAudioState(event.audioState)
                 }
             }
         }
@@ -87,6 +93,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun loadVideos() {
+        Log.d("Girish", "loadVideos: ")
         viewModelScope.launch {
             val videos = queryVideos()
             withContext(Dispatchers.Main) {
@@ -115,14 +122,8 @@ class HomeViewModel @Inject constructor(
                 MediaStore.Video.Media.SIZE
             )
 
-            // Show only videos that are at least 5 minutes in duration.
-            val selection = "${MediaStore.Video.Media.DURATION} >= ?"
-            val selectionArgs = arrayOf(
-                TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES).toString()
-            )
-
             // Display videos in alphabetical order based on their display name.
-            val sortOrder = "${MediaStore.Video.Media.DISPLAY_NAME} DESC"
+            val sortOrder = "${MediaStore.Video.Media.DATE_ADDED} DESC"
 
             val query = app.contentResolver.query(
                 collection,
@@ -131,6 +132,7 @@ class HomeViewModel @Inject constructor(
                 null,
                 sortOrder
             )
+            Log.d("Girish", "queryVideos: query=$query")
 
             query?.use { cursor ->
                 // Cache column indices.
@@ -147,6 +149,7 @@ class HomeViewModel @Inject constructor(
                     val name = cursor.getString(nameColumn)
                     val duration = cursor.getLong(durationColumn)
                     val size = cursor.getLong(sizeColumn)
+                    Log.d("Girish", "queryVideos: id=$id")
 
                     val contentUri: Uri = ContentUris.withAppendedId(
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
