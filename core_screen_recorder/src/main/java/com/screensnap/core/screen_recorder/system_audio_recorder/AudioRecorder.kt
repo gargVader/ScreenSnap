@@ -47,12 +47,12 @@ abstract class AudioRecorder(
         }
     }
 
-    fun pauseRecording(){
+    fun pauseRecording()  {
         audioEncoder.pauseEncode()
         audioRecord.stop()
     }
 
-    fun resumeRecording(){
+    fun resumeRecording()  {
         audioEncoder.resumeEncode()
         audioRecord.startRecording()
     }

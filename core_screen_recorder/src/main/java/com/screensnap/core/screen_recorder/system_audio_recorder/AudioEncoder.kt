@@ -56,9 +56,11 @@ class AudioEncoder(
         encoder.start()
 
         try {
-            while (isActive && !isPaused) {
-                writeToEncoder(onInputBufferAvailable)
-                readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
+            while (isActive) {
+                if (!isPaused){
+                    writeToEncoder(onInputBufferAvailable)
+                    readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
+                }
             }
         } finally {
 //            addEndOfStreamFlag()

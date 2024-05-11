@@ -3,7 +3,6 @@ package com.screensnap.core.screen_recorder.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import com.screensnap.core.screen_recorder.services.ScreenSnapNotification
 
@@ -19,8 +18,8 @@ class NotificationReceiver : BroadcastReceiver() {
 //                context.startService()
 //            }
 
-            ScreenSnapNotification.ACTION_RESUME_RECORDING -> {}
-            ScreenSnapNotification.ACTION_STOP_RECORDING -> {
+            ScreenSnapNotification.ACTION_RECORDING_RESUME -> {}
+            ScreenSnapNotification.ACTION_RECORDING_STOP -> {
                 context.stopService(Intent(context, ScreenRecorderService::class.java))
             }
         }

@@ -45,9 +45,9 @@ class ScreenRecorder(
         audioState = screenSnapDatastore.getAudioState()
         mediaRecorder = createMediaRecorder()
         virtualDisplay = createVirtualDisplay()
-        if (audioState.shouldRecordSystemAudio()) {
+//        if (audioState.shouldRecordSystemAudio()) {
             systemAudioRecorder = createSystemAudioRecorder()
-        }
+//        }
 
         coroutineScope {
             mediaRecorder.start()
@@ -61,12 +61,12 @@ class ScreenRecorder(
         }
     }
 
-    fun pauseRecording(){
+    fun pauseRecording()  {
         mediaRecorder.pause()
         systemAudioRecorder.pauseRecording()
     }
 
-    fun resumeRecording(){
+    fun resumeRecording()  {
         mediaRecorder.resume()
         systemAudioRecorder.resumeRecording()
     }

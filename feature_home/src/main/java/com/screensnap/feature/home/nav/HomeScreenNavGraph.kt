@@ -1,8 +1,5 @@
 package com.screensnap.feature.home.nav
 
-import android.app.Activity
-import android.content.Intent
-import androidx.activity.ComponentActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable

@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -102,10 +102,16 @@ internal fun HomeScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             Column(
                 modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, end = 16.dp),
+                Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp),
             ) {
+                Button(onClick = { viewModel.onEvent(HomeScreenEvents.OnPauseRecord) }) {
+                    Text(text = "Pause")
+                }
+                Button(onClick = { viewModel.onEvent(HomeScreenEvents.OnResumeRecord) }) {
+                    Text(text = "Resume")
+                }
                 HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
                 YourRecordingsHeader()
                 if (state.isListRefreshing) {

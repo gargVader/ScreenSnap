@@ -1,15 +1,9 @@
 package com.screensnap.core.screen_recorder.services.pendingintent
 
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import com.screensnap.core.screen_recorder.receiver.NotificationReceiver
-import com.screensnap.core.screen_recorder.services.ScreenSnapNotification
-
-//fun createScreenRecorderServicePendingIntent(
+// fun createScreenRecorderServicePendingIntent(
 //    context: Context,
 //    pendingIntentId: Int,
-//): PendingIntent {
+// ): PendingIntent {
 //    val screenRecorderServiceIntent =
 //        createScreenRecorderServiceIntent(context, pendingIntentId)
 //    return PendingIntent.getBroadcast(
@@ -18,13 +12,13 @@ import com.screensnap.core.screen_recorder.services.ScreenSnapNotification
 //        screenRecorderServiceIntent,
 //        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
 //    )
-//}
+// }
 //
-//private fun createScreenRecorderServiceIntent(
+// private fun createScreenRecorderServiceIntent(
 //    context: Context,
 //    notificationId: Int,
-//): Intent {
+// ): Intent {
 //    return Intent(ScreenSnapNotification.ACTION_OPEN_APP).apply {
 //        setClass(context, NotificationReceiver::class.java)
 //    }
-//}
+// }

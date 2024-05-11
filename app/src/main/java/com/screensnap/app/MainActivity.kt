@@ -1,6 +1,5 @@
 package com.screensnap.app
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,7 +8,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.screensnap.core.screen_recorder.receiver.NotificationReceiver
 import com.screensnap.core.ui.theme.ScreenSnapTheme
 import com.screensnap.domain.navigation.HomeScreenDestinations
 import com.screensnap.feature.home.nav.homeScreenNavGraph
@@ -31,7 +29,6 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = HomeScreenDestinations.ROUTE,
                     ) {
-                        val x = MainActivity::class.java
                         homeScreenNavGraph(navController = navController)
                         settingsScreenNavGraph(navController)
                     }

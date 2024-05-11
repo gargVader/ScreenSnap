@@ -2,28 +2,40 @@ package com.screensnap.core.screen_recorder.services
 
 import android.app.Notification
 import android.app.Notification.DecoratedCustomViewStyle
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
+import android.util.Log
 import android.widget.RemoteViews
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.screen_recorder.R
 import com.screensnap.core.screen_recorder.RecordingState
 import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.screen_recorder.ScreenRecorderRepository
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotification.ACTION_RECORDING_PAUSE
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotification.ACTION_RECORDING_RESUME
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotification.ACTION_RECORDING_START
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotification.ACTION_RECORDING_STOP
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
+import java.io.File
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
+
+    init {
+        Log.d("Girish", "ScreenRecorderService: init")
+    }
+
     @Inject
     lateinit var screenSnapDatastore: ScreenSnapDatastore
 
@@ -48,6 +60,24 @@ class ScreenRecorderService : Service() {
         flags: Int,
         startId: Int,
     ): Int {
+        when (intent.action) {
+            ACTION_RECORDING_START -> {}
+            ACTION_RECORDING_PAUSE -> {
+                screenRecorder.pauseRecording()
+            }
+
+            ACTION_RECORDING_RESUME -> {
+                screenRecorder.resumeRecording()
+            }
+
+            ACTION_RECORDING_STOP -> {}
+            else -> onStartRecording(intent)
+        }
+
+        return START_STICKY
+    }
+
+    private fun onStartRecording(intent: Intent): Int {
         // Extract info
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent)
 
@@ -72,13 +102,29 @@ class ScreenRecorderService : Service() {
     // Notification for foreground service
     private fun createNotification(): Notification {
         val view = RemoteViews("com.screensnap.app", R.layout.notification)
+
+        val pauseIntent =
+            Intent(this, ScreenRecorderService::class.java).apply {
+                action = ACTION_RECORDING_PAUSE
+            }
+        val pausePendingIntent = PendingIntent.getService(this, 0, pauseIntent, FLAG_IMMUTABLE)
+
+        view.setOnClickPendingIntent(R.id.pause_layout, pausePendingIntent)
+
         return Notification.Builder(this, SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.baseline_send_24)
             .setContentTitle("Screen Snap")
             .setContentText("Recording in progress")
-            .setStyle(DecoratedCustomViewStyle())
-            .setCustomContentView(view)
+//            .setStyle(DecoratedCustomViewStyle())
+            .addAction(
+                Notification.Action(
+                    R.drawable.baseline_pause_24,
+                    "pause",
+                    pausePendingIntent
+                )
+            )
+//            .setCustomContentView(view)
             .build()
     }
 
