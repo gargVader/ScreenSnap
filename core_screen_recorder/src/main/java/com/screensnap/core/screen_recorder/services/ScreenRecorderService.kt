@@ -1,12 +1,20 @@
 package com.screensnap.core.screen_recorder.services
 
 import android.app.Notification
+import android.app.Notification.DecoratedCustomViewStyle
+import android.app.Notification.MediaStyle
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
+import android.widget.RemoteViews
+import android.widget.RemoteViews.RemoteView
+import androidx.core.app.NotificationCompat
+import androidx.media3.session.MediaStyleNotificationHelper
 import com.screensnap.core.datastore.ScreenSnapDatastore
+import com.screensnap.core.screen_recorder.R
 import com.screensnap.core.screen_recorder.RecordingState
 import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.screen_recorder.ScreenRecorderRepository
@@ -69,11 +77,16 @@ class ScreenRecorderService : Service() {
 
     // Notification for foreground service
     private fun createNotification(): Notification {
-        val screenRecorderServicePendingIntent =
-            createScreenRecorderServicePendingIntent(applicationContext, 1)
+        val view = RemoteViews("com.screensnap.app", R.layout.notification)
+
+//        view.setOnClickPendingIntent(R.id.pause_layout, )
         return Notification.Builder(this, SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setSmallIcon(R.drawable.baseline_send_24)
             .setContentTitle("Screen Snap")
-            .setContentIntent(screenRecorderServicePendingIntent)
+            .setContentText("Recording in progress")
+            .setStyle(DecoratedCustomViewStyle())
+            .setCustomContentView(view)
             .build()
     }
 

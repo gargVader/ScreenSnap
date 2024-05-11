@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.screensnap.core.screen_recorder.receiver.NotificationReceiver
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotification
 
 fun createScreenRecorderServicePendingIntent(
     context: Context,
@@ -23,5 +24,7 @@ private fun createScreenRecorderServiceIntent(
     context: Context,
     notificationId: Int,
 ): Intent {
-    return Intent(context, NotificationReceiver::class.java)
+    return Intent(ScreenSnapNotification.ACTION_OPEN_APP).apply {
+        setClass(context, NotificationReceiver::class.java)
+    }
 }

@@ -22,7 +22,7 @@ class App : Application() {
             NotificationChannel(
                 ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
                 ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH,
+                NotificationManager.IMPORTANCE_LOW,
             )
         notificationChannel.description =
             ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION
