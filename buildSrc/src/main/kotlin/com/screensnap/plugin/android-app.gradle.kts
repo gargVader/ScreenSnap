@@ -9,6 +9,10 @@ apply(plugin = "com.screensnap.plugin.extra.compose")
 
 configure<ApplicationExtension> {
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

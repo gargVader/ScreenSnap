@@ -2,31 +2,25 @@ package com.screensnap.core.screen_recorder.services
 
 import android.app.Notification
 import android.app.Notification.DecoratedCustomViewStyle
-import android.app.Notification.MediaStyle
-import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
 import android.widget.RemoteViews
-import android.widget.RemoteViews.RemoteView
-import androidx.core.app.NotificationCompat
-import androidx.media3.session.MediaStyleNotificationHelper
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.screen_recorder.R
 import com.screensnap.core.screen_recorder.RecordingState
 import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.screen_recorder.ScreenRecorderRepository
-import com.screensnap.core.screen_recorder.services.pendingintent.createScreenRecorderServicePendingIntent
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
-import java.io.File
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
@@ -50,12 +44,12 @@ class ScreenRecorderService : Service() {
     private val scope = CoroutineScope(singleThreadContext)
 
     override fun onStartCommand(
-        intent: Intent?,
+        intent: Intent,
         flags: Int,
         startId: Int,
     ): Int {
         // Extract info
-        val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent!!)
+        val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent)
 
         // Start notification for service
         startForeground(
@@ -78,8 +72,6 @@ class ScreenRecorderService : Service() {
     // Notification for foreground service
     private fun createNotification(): Notification {
         val view = RemoteViews("com.screensnap.app", R.layout.notification)
-
-//        view.setOnClickPendingIntent(R.id.pause_layout, )
         return Notification.Builder(this, SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.baseline_send_24)

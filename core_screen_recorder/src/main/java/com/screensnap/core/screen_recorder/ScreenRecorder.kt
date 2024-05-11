@@ -61,6 +61,16 @@ class ScreenRecorder(
         }
     }
 
+    fun pauseRecording(){
+        mediaRecorder.pause()
+        systemAudioRecorder.pauseRecording()
+    }
+
+    fun resumeRecording(){
+        mediaRecorder.resume()
+        systemAudioRecorder.resumeRecording()
+    }
+
     suspend fun stopRecording() {
         mediaRecorder.stop()
         mediaRecorder.release()

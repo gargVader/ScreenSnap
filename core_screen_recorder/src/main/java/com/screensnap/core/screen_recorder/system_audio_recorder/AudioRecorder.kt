@@ -47,6 +47,16 @@ abstract class AudioRecorder(
         }
     }
 
+    fun pauseRecording(){
+        audioEncoder.pauseEncode()
+        audioRecord.stop()
+    }
+
+    fun resumeRecording(){
+        audioEncoder.resumeEncode()
+        audioRecord.startRecording()
+    }
+
     protected abstract fun createAudioRecord(): AudioRecord
 
     protected fun createAudioFormat(): AudioFormat =

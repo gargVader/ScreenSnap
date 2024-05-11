@@ -18,6 +18,9 @@ class AudioEncoder(
     private val bufferInfo = MediaCodec.BufferInfo()
     private val TAG = "Girish"
 
+    @Volatile
+    private var isPaused: Boolean = false
+
     private val presentationTimeUs: Long
         get() = System.nanoTime() / 1000
 
@@ -53,7 +56,7 @@ class AudioEncoder(
         encoder.start()
 
         try {
-            while (isActive) {
+            while (isActive && !isPaused) {
                 writeToEncoder(onInputBufferAvailable)
                 readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
             }
@@ -62,6 +65,14 @@ class AudioEncoder(
             encoder.stop()
             encoder.release()
         }
+    }
+
+    fun pauseEncode() {
+        isPaused = true
+    }
+
+    fun resumeEncode() {
+        isPaused = false
     }
 
     private fun writeToEncoder(onInputBufferAvailable: (byteArray: ByteArray) -> Int) {

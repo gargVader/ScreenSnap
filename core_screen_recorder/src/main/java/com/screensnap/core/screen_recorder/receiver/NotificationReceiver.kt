@@ -15,8 +15,10 @@ class NotificationReceiver : BroadcastReceiver() {
         context ?: return
         intent ?: return
         when (intent.action) {
-            ScreenSnapNotification.ACTION_OPEN_APP -> {}
-            ScreenSnapNotification.ACTION_PAUSE_RECORDING -> {}
+//            ScreenSnapNotification.ACTION_PAUSE_RECORDING -> { // Start service with Pause action
+//                context.startService()
+//            }
+
             ScreenSnapNotification.ACTION_RESUME_RECORDING -> {}
             ScreenSnapNotification.ACTION_STOP_RECORDING -> {
                 context.stopService(Intent(context, ScreenRecorderService::class.java))

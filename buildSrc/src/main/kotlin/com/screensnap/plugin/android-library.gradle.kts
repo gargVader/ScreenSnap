@@ -6,6 +6,10 @@ apply(plugin = "com.android.library")
 apply(plugin = "com.screensnap.plugin.android-base")
 
 configure<LibraryExtension> {
+
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         consumerProguardFiles("proguard-rules.pro")
     }
