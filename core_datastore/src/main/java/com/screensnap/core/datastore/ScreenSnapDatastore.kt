@@ -71,7 +71,6 @@ class ScreenSnapDatastoreImpl @Inject constructor(
     }
 
     override suspend fun saveLocationPath(path: String) {
-        Log.d("Girish", "saveLocationPath: $path")
         app.dataStore.set(locationKey, path)
     }
 
@@ -81,7 +80,6 @@ class ScreenSnapDatastoreImpl @Inject constructor(
 
     override suspend fun getLocationPath(): String {
         val path = app.dataStore.get(locationKey, getDefaultLocationPath())
-        Log.d("Girish", "getLocationPath: $path")
         return path
     }
 

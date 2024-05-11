@@ -37,7 +37,6 @@ fun SettingsScreen(
     val state = viewModel.state
     val directoryPickerLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocumentTree()) {
-            Log.d("Girish", "SettingsScreen: directoryPicker $it")
             it?.let {
                 viewModel.onEvent(SettingsScreenEvents.OnNewSaveLocationChosen(it))
             }
