@@ -14,15 +14,14 @@ fun NavController.navigateToAudioSettingsScreen(audioState: AudioState) {
 }
 
 fun NavGraphBuilder.settingsScreenNavGraph(navController: NavController) {
-
     navigation(
         route = SettingsScreenDestinations.ROUTE,
-        startDestination = SettingsScreenDestinations.SETTINGS
+        startDestination = SettingsScreenDestinations.SETTINGS,
     ) {
         composable(route = SettingsScreenDestinations.SETTINGS) {
             SettingsScreen(
                 onBackClick = navController::popBackStack,
-                onAudioSettingsClick = navController::navigateToAudioSettingsScreen
+                onAudioSettingsClick = navController::navigateToAudioSettingsScreen,
             )
         }
 
@@ -30,6 +29,4 @@ fun NavGraphBuilder.settingsScreenNavGraph(navController: NavController) {
             AudioSettingsScreen(onBackClick = navController::popBackStack)
         }
     }
-
-
 }

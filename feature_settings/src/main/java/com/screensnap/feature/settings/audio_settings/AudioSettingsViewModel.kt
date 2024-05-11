@@ -15,24 +15,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AudioSettingsViewModel @Inject constructor(
-    private val screenSnapDatastore: ScreenSnapDatastore,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+class AudioSettingsViewModel
+    @Inject
+    constructor(
+        private val screenSnapDatastore: ScreenSnapDatastore,
+        savedStateHandle: SavedStateHandle,
+    ) : ViewModel() {
+        private val audioStateString: String =
+            checkNotNull(savedStateHandle[SettingsScreenDestinations.ARG_AUDIO_STATE])
+        private val audioState: AudioState = audioStateString.toAudioState()
 
-    private val audioStateString: String =
-        checkNotNull(savedStateHandle[SettingsScreenDestinations.ARG_AUDIO_STATE])
-    private val audioState: AudioState = audioStateString.toAudioState()
+        var state by mutableStateOf(AudioSettingsScreenState(audioState))
+            private set
 
-    var state by mutableStateOf(AudioSettingsScreenState(audioState))
-        private set
-
-    fun updateSelectedAudioState(newAudioState: AudioState) {
-        state = state.copy(audioState = newAudioState)
-        viewModelScope.launch {
-            screenSnapDatastore.saveAudioState(state.audioState)
+        fun updateSelectedAudioState(newAudioState: AudioState) {
+            state = state.copy(audioState = newAudioState)
+            viewModelScope.launch {
+                screenSnapDatastore.saveAudioState(state.audioState)
+            }
         }
     }
-
-}
-

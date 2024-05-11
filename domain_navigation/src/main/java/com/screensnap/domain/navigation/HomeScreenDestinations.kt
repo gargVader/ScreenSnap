@@ -1,5 +1,5 @@
 package com.screensnap.domain.navigation
 
-object HomeScreenDestinations{
+object HomeScreenDestinations {
     const val ROUTE = "home"
 }

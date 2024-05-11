@@ -9,10 +9,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DatastoreModule {
-
     @Binds
     @Singleton
-    abstract fun bindScreenSnapDatastore(screenSnapDatastoreImpl: com.screensnap.core.datastore.ScreenSnapDatastoreImpl):
-            com.screensnap.core.datastore.ScreenSnapDatastore
-
+    abstract fun bindScreenSnapDatastore(
+        screenSnapDatastoreImpl: com.screensnap.core.datastore.ScreenSnapDatastoreImpl,
+    ): com.screensnap.core.datastore.ScreenSnapDatastore
 }

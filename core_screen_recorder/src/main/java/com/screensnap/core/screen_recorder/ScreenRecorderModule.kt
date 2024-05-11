@@ -14,7 +14,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScreenRecorderModule {
-
     companion object {
         @Provides
         @Singleton

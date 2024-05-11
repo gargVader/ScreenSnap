@@ -31,13 +31,12 @@ fun AudioSettingsScreen(
                 ChipSection(
                     modifier = Modifier.padding(bottom = 16.dp),
                     audioState = state.audioState,
-                    viewModel::updateSelectedAudioState
+                    viewModel::updateSelectedAudioState,
                 )
                 DetailsSection(audioState = state.audioState)
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,21 +51,23 @@ fun ChipSection(
             AudioState.MicOnly,
             AudioState.SystemOnly,
             AudioState.MicAndSystem(),
-            AudioState.Mute
+            AudioState.Mute,
         ).forEach {
             FilterChip(
                 selected = (audioState == it),
                 onClick = { onClick(it) },
                 label = {
                     Text(
-                        text = when (it) {
-                            AudioState.Mute -> "Mute"
-                            AudioState.MicOnly -> "Mic"
-                            AudioState.SystemOnly -> "System"
-                            else -> "Mic & System"
-                        }
+                        text =
+                            when (it) {
+                                AudioState.Mute -> "Mute"
+                                AudioState.MicOnly -> "Mic"
+                                AudioState.SystemOnly -> "System"
+                                else -> "Mic & System"
+                            },
                     )
-                })
+                },
+            )
         }
     }
 }
@@ -84,9 +85,10 @@ fun DetailsSection(audioState: AudioState) {
 
         is AudioState.MicAndSystem -> {
             Text(
-                text = "App sound is recorded\n" +
+                text =
+                    "App sound is recorded\n" +
                         "Voice is is recorded\n\n" +
-                        "Use this over Mic, for better system sound"
+                        "Use this over Mic, for better system sound",
             )
         }
 

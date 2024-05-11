@@ -22,7 +22,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
-
     @Inject
     lateinit var screenSnapDatastore: ScreenSnapDatastore
 
@@ -42,15 +41,18 @@ class ScreenRecorderService : Service() {
     private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
     private val scope = CoroutineScope(singleThreadContext)
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         // Extract info
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent!!)
 
         // Start notification for service
         startForeground(
             config.notificationId,
-            createNotification()
+            createNotification(),
         )
 
         mediaProjection =
@@ -75,10 +77,12 @@ class ScreenRecorderService : Service() {
             .build()
     }
 
-    private fun createMediaProjection(resultCode: Int, data: Intent) =
-        mediaProjectionManager.getMediaProjection(resultCode, data).apply {
-            registerCallback(object : MediaProjection.Callback() {}, null)
-        }
+    private fun createMediaProjection(
+        resultCode: Int,
+        data: Intent,
+    ) = mediaProjectionManager.getMediaProjection(resultCode, data).apply {
+        registerCallback(object : MediaProjection.Callback() {}, null)
+    }
 
     private fun createScreenRecorder(): ScreenRecorder {
 //        val directory = File(
@@ -108,7 +112,6 @@ class ScreenRecorderService : Service() {
             screenSnapDatastore = screenSnapDatastore,
         )
     }
-
 
     override fun onDestroy() {
         super.onDestroy()

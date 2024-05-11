@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = HomeScreenDestinations.ROUTE
+                        startDestination = HomeScreenDestinations.ROUTE,
                     ) {
                         homeScreenNavGraph(navController)
                         settingsScreenNavGraph(navController)

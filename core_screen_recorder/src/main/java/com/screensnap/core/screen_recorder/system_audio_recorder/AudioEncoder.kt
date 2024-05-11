@@ -12,9 +12,8 @@ import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
 
 class AudioEncoder(
-    private val config: RecorderConfigValues
+    private val config: RecorderConfigValues,
 ) {
-
     private var encoder: MediaCodec
     private val bufferInfo = MediaCodec.BufferInfo()
     private val TAG = "Girish"
@@ -35,11 +34,11 @@ class AudioEncoder(
         MediaFormat.createAudioFormat(
             config.AUDIO_MIME_TYPE,
             config.audioFormatSampleRate,
-            1
+            1,
         ).apply {
             setInteger(
                 MediaFormat.KEY_AAC_PROFILE,
-                MediaCodecInfo.CodecProfileLevel.AACObjectLC
+                MediaCodecInfo.CodecProfileLevel.AACObjectLC,
             )
             setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_MONO)
             setInteger(MediaFormat.KEY_BIT_RATE, config.AUDIO_BITRATE)
@@ -65,9 +64,7 @@ class AudioEncoder(
         }
     }
 
-    private fun writeToEncoder(
-        onInputBufferAvailable: (byteArray: ByteArray) -> Int,
-    ) {
+    private fun writeToEncoder(onInputBufferAvailable: (byteArray: ByteArray) -> Int) {
         val inputBufferIdx = encoder.dequeueInputBuffer(config.TIMEOUT)
 //        Log.d(TAG, "AudioEncoder writeToEncoder inputBufferIdx=$inputBufferIdx")
         if (inputBufferIdx >= 0) {
@@ -84,19 +81,25 @@ class AudioEncoder(
             } else {
                 // Not sure if this will ever be called
                 encoder.queueInputBuffer(
-                    inputBufferIdx, 0, 0, presentationTimeUs,
-                    MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                    inputBufferIdx,
+                    0,
+                    0,
+                    presentationTimeUs,
+                    MediaCodec.BUFFER_FLAG_END_OF_STREAM,
                 )
             }
         }
     }
 
-    private fun addEndOfStreamFlag(){
+    private fun addEndOfStreamFlag() {
         Log.d(TAG, "addEndOfStreamFlag: ")
         val inputBufferIdx = encoder.dequeueInputBuffer(config.TIMEOUT)
         encoder.queueInputBuffer(
-            inputBufferIdx, 0, 0, presentationTimeUs,
-            MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            inputBufferIdx,
+            0,
+            0,
+            presentationTimeUs,
+            MediaCodec.BUFFER_FLAG_END_OF_STREAM,
         )
     }
 
@@ -107,7 +110,6 @@ class AudioEncoder(
         val outputBufferIdx = encoder.dequeueOutputBuffer(bufferInfo, config.TIMEOUT)
         when (outputBufferIdx) {
             MediaCodec.INFO_TRY_AGAIN_LATER -> {
-
             }
 
             // Triggered only for the very first time

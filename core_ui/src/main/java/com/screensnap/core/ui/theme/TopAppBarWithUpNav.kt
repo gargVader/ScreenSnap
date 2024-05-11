@@ -23,7 +23,7 @@ fun TopAppBarWithUpNav(
             IconButton(onClick = onBackClick) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "back button"
+                    contentDescription = "back button",
                 )
             }
         },

@@ -12,6 +12,6 @@ fun YourRecordingsHeader() {
     Text(
         "Your recordings",
         style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(top = 16.dp, bottom = 18.dp)
+        modifier = Modifier.padding(top = 16.dp, bottom = 18.dp),
     )
 }

@@ -10,7 +10,6 @@ abstract class AudioRecorder(
     protected val config: RecorderConfigValues,
     private val audioFile: File,
 ) {
-
     private val TAG = "Girish"
     private lateinit var audioRecord: AudioRecord
     private lateinit var audioEncoder: AudioEncoder
@@ -50,11 +49,12 @@ abstract class AudioRecorder(
 
     protected abstract fun createAudioRecord(): AudioRecord
 
-    protected fun createAudioFormat(): AudioFormat = AudioFormat.Builder()
-        .setEncoding(config.audioFormatEncoding)
-        .setSampleRate(config.audioFormatSampleRate)
-        .setChannelMask(config.audioFormatChannelMask)
-        .build()
+    protected fun createAudioFormat(): AudioFormat =
+        AudioFormat.Builder()
+            .setEncoding(config.audioFormatEncoding)
+            .setSampleRate(config.audioFormatSampleRate)
+            .setChannelMask(config.audioFormatChannelMask)
+            .build()
 
     private fun createMediaMuxer(): MediaMuxer {
         return MediaMuxer(

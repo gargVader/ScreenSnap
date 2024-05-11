@@ -9,15 +9,18 @@ import java.io.File
 import java.nio.ByteBuffer
 
 object MixingTool {
-
     @SuppressLint("WrongConstant")
-    fun mux(audioFile: File, videoFile: File, outFile: File, muxSystemAudioOnly: Boolean = false) {
-
+    fun mux(
+        audioFile: File,
+        videoFile: File,
+        outFile: File,
+        muxSystemAudioOnly: Boolean = false,
+    ) {
         // Init extractors which will get encoded frames
         val videoExtractor = MediaExtractor()
         videoExtractor.setDataSource(videoFile.path)
 
-        var videoTrackIndex = -1;
+        var videoTrackIndex = -1
         var audioTrackIndex = -1
         (0 until videoExtractor.trackCount).forEach { index ->
             val format = videoExtractor.getTrackFormat(index)
@@ -48,9 +51,10 @@ object MixingTool {
         // Init muxer
         val muxer = MediaMuxer(outFile.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
         val videoIndex = muxer.addTrack(videoFormat)
-        val videoIndex2 = videoFormat2?.let{
-             muxer.addTrack(videoFormat2)
-        }
+        val videoIndex2 =
+            videoFormat2?.let {
+                muxer.addTrack(videoFormat2)
+            }
         val audioIndex = muxer.addTrack(audioFormat)
         muxer.start()
 
@@ -71,7 +75,6 @@ object MixingTool {
                 muxer.writeSampleData(videoIndex, buffer, bufferInfo)
 
                 videoExtractor.advance()
-
             } else {
                 break
             }
@@ -90,7 +93,6 @@ object MixingTool {
                     muxer.writeSampleData(videoIndex2!!, buffer, bufferInfo)
 
                     videoExtractor2.advance()
-
                 } else {
                     break
                 }

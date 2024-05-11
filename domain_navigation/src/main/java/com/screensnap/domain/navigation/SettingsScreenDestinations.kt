@@ -8,6 +8,5 @@ object SettingsScreenDestinations {
     const val ARG_AUDIO_STATE = "audioState"
     const val AUDIO_SETTINGS = "audio_settings/{$ARG_AUDIO_STATE}"
 
-    fun createAudioSettingsRoute(audioState: String) =
-        AUDIO_SETTINGS.replace("{$ARG_AUDIO_STATE}", audioState)
+    fun createAudioSettingsRoute(audioState: String) = AUDIO_SETTINGS.replace("{$ARG_AUDIO_STATE}", audioState)
 }

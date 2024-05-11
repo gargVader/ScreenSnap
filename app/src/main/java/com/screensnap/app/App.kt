@@ -9,7 +9,6 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class App : Application() {
-
     @Inject
     lateinit var notificationManager: NotificationManager
 
@@ -23,7 +22,7 @@ class App : Application() {
             NotificationChannel(
                 ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID,
                 ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_HIGH,
             )
         notificationChannel.description =
             ScreenRecorderService.SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION

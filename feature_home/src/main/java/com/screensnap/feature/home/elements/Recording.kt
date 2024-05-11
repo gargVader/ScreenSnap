@@ -35,13 +35,17 @@ import kotlin.math.log
 import kotlin.math.pow
 
 @Composable
-fun Recording(video: Video, modifier: Modifier = Modifier) {
+fun Recording(
+    video: Video,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
-    val bitmap: Bitmap? = try {
-        context.contentResolver.loadThumbnail(video.uri, Size(640, 480), null)
-    } catch (e: Exception) {
-        null
-    }
+    val bitmap: Bitmap? =
+        try {
+            context.contentResolver.loadThumbnail(video.uri, Size(640, 480), null)
+        } catch (e: Exception) {
+            null
+        }
 
     val mediaMetadataRetriever = MediaMetadataRetriever()
     mediaMetadataRetriever.setDataSource(context, video.uri)
@@ -54,52 +58,54 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
             ?.toLong() ?: 0L
     val size = (bitrate / 8L) * duration
 
-
     Box(modifier = modifier) {
         Row(
-            modifier = Modifier
-                .background(
-                    MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(6.dp)
-                )
-                .padding(8.dp)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(6.dp),
+                    )
+                    .padding(8.dp)
+                    .fillMaxWidth(),
         ) {
-            Box() {
+            Box {
                 bitmap?.let {
                     Image(
                         bitmap = it.asImageBitmap(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(108.dp, 96.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                        modifier =
+                            Modifier
+                                .size(108.dp, 96.dp)
+                                .clip(RoundedCornerShape(4.dp)),
                     )
                 }
 
-
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(4.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp),
                 ) {
                     Box(
-                        modifier = Modifier
-                            .background(Color.Gray, shape = RoundedCornerShape(2.dp))
-                            .padding(2.dp),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .background(Color.Gray, shape = RoundedCornerShape(2.dp))
+                                .padding(2.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
                         //                    Text(text = video.duration.toString())
                         Text(text = convertMillisToDisplayDuration(duration))
                     }
                 }
-
             }
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .fillMaxWidth()
+                modifier =
+                    Modifier
+                        .padding(start = 4.dp)
+                        .fillMaxWidth(),
             ) {
                 Row(verticalAlignment = Alignment.Top) {
                     Text(text = video.name, modifier = Modifier.weight(1f))
@@ -107,12 +113,13 @@ fun Recording(video: Video, modifier: Modifier = Modifier) {
                         Icon(Icons.Filled.MoreVert, "more")
                     }
                 }
-                Row() {
+                Row {
                     Text(
                         text = convertBytesToDisplaySize(size),
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.Bottom)
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .align(Alignment.Bottom),
                     )
                     IconButton(onClick = { /*TODO*/ }) {
                         Icon(Icons.Filled.Share, "share")
@@ -147,9 +154,8 @@ fun convertMillisToDisplayDuration(duration: Long): String {
     val displayMinutes = (minutes % 60).toInt()
     val hours = minutes / 60
     var result = ""
-    if (hours.toInt() !=0) result += "$hours".padStart(2, ' ') + ":"
+    if (hours.toInt() != 0) result += "$hours".padStart(2, ' ') + ":"
     result += "$displayMinutes".padStart(2, '0') + ":"
     result += "$displaySeconds".padStart(2, '0')
     return result
 }
-

@@ -7,7 +7,6 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaRecorder
 import android.media.projection.MediaProjection
 import android.net.Uri
-import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
@@ -54,9 +53,10 @@ class ScreenRecorder(
             mediaRecorder.start()
 
             if (audioState.shouldRecordSystemAudio()) {
-                systemAudioRecordingJob = launch {
-                    systemAudioRecorder.startRecording()
-                }
+                systemAudioRecordingJob =
+                    launch {
+                        systemAudioRecorder.startRecording()
+                    }
             }
         }
     }
@@ -88,7 +88,7 @@ class ScreenRecorder(
                             audioFile = tempSystemAudioFile,
                             videoFile = tempVideoFile,
                             outFile = finalFile,
-                            muxSystemAudioOnly = true
+                            muxSystemAudioOnly = true,
                         )
                     }
 
@@ -113,12 +113,12 @@ class ScreenRecorder(
             }
             setOutputFormat(config.mediaRecorderOutputFormat)
             setVideoEncodingBitRate(config.videoEncodingBitrate)
-            setVideoEncoder(config.videoEncoder)  //after setOutputFormat()
+            setVideoEncoder(config.videoEncoder) // after setOutputFormat()
             setVideoSize(
                 config.screenWidth,
-                config.screenHeight
-            ) //after setVideoSource(), setOutFormat()
-            setVideoFrameRate(config.videoFrameRate) //after setVideoSource(), setOutFormat()
+                config.screenHeight,
+            ) // after setVideoSource(), setOutFormat()
+            setVideoFrameRate(config.videoFrameRate) // after setVideoSource(), setOutFormat()
 
             setOutputFile(tempVideoFile)
 //          Audio
@@ -144,48 +144,50 @@ class ScreenRecorder(
         }
     }
 
-    private fun createVirtualDisplay() = mediaProjection.createVirtualDisplay(
-        "ScreenSnapVirtualDisplay",
-        config.screenWidth,
-        config.screenHeight,
-        config.screenDensity,
-        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-        mediaRecorder.surface,
-        null,
-        null
-    )
+    private fun createVirtualDisplay() =
+        mediaProjection.createVirtualDisplay(
+            "ScreenSnapVirtualDisplay",
+            config.screenWidth,
+            config.screenHeight,
+            config.screenDensity,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            mediaRecorder.surface,
+            null,
+            null,
+        )
 
-    private fun createSystemAudioRecorder() =
-        SystemAudioRecorder(config, tempSystemAudioFile, mediaProjection).apply { setup() }
+    private fun createSystemAudioRecorder() = SystemAudioRecorder(config, tempSystemAudioFile, mediaProjection).apply { setup() }
 
     private fun createOutputFile(): FileDescriptor {
         val fileName = createFileName()
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
-            put(MediaStore.Video.Media.TITLE, fileName)
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-        }
+        val contentValues =
+            ContentValues().apply {
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "ScreenSnap")
+                put(MediaStore.Video.Media.TITLE, fileName)
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+            }
         val uri: Uri =
             contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
                 ?: throw Exception("Cannot create video file")
-        val fileDescriptor = Objects.requireNonNull<ParcelFileDescriptor?>(
-            contentResolver.openFileDescriptor(
-                uri,
-                "rw"
-            )
-        ).fileDescriptor
+        val fileDescriptor =
+            Objects.requireNonNull<ParcelFileDescriptor?>(
+                contentResolver.openFileDescriptor(
+                    uri,
+                    "rw",
+                ),
+            ).fileDescriptor
         return fileDescriptor
     }
 
     private fun createFileName(): String {
-        val formatter = SimpleDateFormat(
-            "yyyy-MM-dd-HH-mm-ss",
-            Locale.getDefault()
-        )
+        val formatter =
+            SimpleDateFormat(
+                "yyyy-MM-dd-HH-mm-ss",
+                Locale.getDefault(),
+            )
         val curDate = Date(System.currentTimeMillis())
         val curTime = formatter.format(curDate).replace(" ", "")
         return "ScreenSnap$curTime.mp4"
     }
-
 }

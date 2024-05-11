@@ -1,23 +1,13 @@
 package com.screensnap.app.di
 
-import android.app.Application
-import android.app.NotificationManager
-import android.content.Context
-import android.media.projection.MediaProjectionManager
-import android.view.WindowManager
-import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
-
-
-//    companion object {
+    //    companion object {
 //        @Provides
 //        @Singleton
 //        fun provideMediaProjectionManager(app: Application): MediaProjectionManager {

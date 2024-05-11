@@ -36,7 +36,7 @@ fun HomeChips(
                     com.screensnap.core.datastore.AudioState.Mute -> {
                         if (ContextCompat.checkSelfPermission(
                                 context,
-                                Manifest.permission.RECORD_AUDIO
+                                Manifest.permission.RECORD_AUDIO,
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             viewModel.onEvent(HomeScreenEvents.OnUpdateAudioState(com.screensnap.core.datastore.AudioState.MicOnly))
@@ -53,22 +53,21 @@ fun HomeChips(
                     com.screensnap.core.datastore.AudioState.SystemOnly -> {
                         if (ContextCompat.checkSelfPermission(
                                 context,
-                                Manifest.permission.RECORD_AUDIO
+                                Manifest.permission.RECORD_AUDIO,
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
                             viewModel.onEvent(
                                 HomeScreenEvents.OnUpdateAudioState(
                                     com.screensnap.core.datastore.AudioState.MicAndSystem(
                                         -1,
-                                        -1
-                                    )
-                                )
+                                        -1,
+                                    ),
+                                ),
                             )
                         } else {
                             // request for permission
                             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         }
-
                     }
 
                     else -> {
@@ -79,26 +78,31 @@ fun HomeChips(
             label = { Text(text = state.audioState.displayName) },
             leadingIcon = {
                 when (state.audioState) {
-                    com.screensnap.core.datastore.AudioState.Mute -> Icon(
-                        Icons.Default.MicOff,
-                        null
-                    )
+                    com.screensnap.core.datastore.AudioState.Mute ->
+                        Icon(
+                            Icons.Default.MicOff,
+                            null,
+                        )
 
-                    com.screensnap.core.datastore.AudioState.MicOnly -> Icon(
-                        Icons.Default.Mic,
-                        null
-                    )
+                    com.screensnap.core.datastore.AudioState.MicOnly ->
+                        Icon(
+                            Icons.Default.Mic,
+                            null,
+                        )
 
-                    com.screensnap.core.datastore.AudioState.SystemOnly -> Icon(
-                        Icons.Default.PhoneAndroid,
-                        null
-                    )
+                    com.screensnap.core.datastore.AudioState.SystemOnly ->
+                        Icon(
+                            Icons.Default.PhoneAndroid,
+                            null,
+                        )
 
-                    else -> Row {
-                        Icon(Icons.Default.Mic, null)
-                        Icon(Icons.Default.PhoneAndroid, null)
-                    }
+                    else ->
+                        Row {
+                            Icon(Icons.Default.Mic, null)
+                            Icon(Icons.Default.PhoneAndroid, null)
+                        }
                 }
-            })
+            },
+        )
     }
 }

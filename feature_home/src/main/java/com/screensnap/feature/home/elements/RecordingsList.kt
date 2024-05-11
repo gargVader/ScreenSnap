@@ -14,24 +14,27 @@ import com.screensnap.feature.home.Video
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.recordingList(videos: List<Video>?) {
     when {
-        videos == null -> item {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        videos == null ->
+            item {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        }
 
-        videos.isEmpty() -> item {
-            Text(text = "No rec. Record videos now")
-        }
+        videos.isEmpty() ->
+            item {
+                Text(text = "No rec. Record videos now")
+            }
 
-        else -> items(videos) { video ->
-            Recording(
-                video = video,
-                modifier = Modifier.animateItemPlacement()
-            )
-        }
+        else ->
+            items(videos) { video ->
+                Recording(
+                    video = video,
+                    modifier = Modifier.animateItemPlacement(),
+                )
+            }
     }
 }

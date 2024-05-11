@@ -19,7 +19,6 @@ data class ScreenRecorderServiceConfig(
         }
 
     companion object {
-
         private val KEY_MP_RESULT_CODE = "mediaProjectionResultCode"
         private val KEY_MP_DATA = "mediaProjectionData"
         private val KEY_NOTIFICATION_ID = "notificationId"
