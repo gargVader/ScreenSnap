@@ -16,9 +16,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "ScreenSnap"
 include(":app")
+include(":core_ui")
 include(":core_screen_recorder")
 include(":core_datastore")
-include(":feature_home")
-include(":core_ui")
-include(":feature_settings")
+include(":core_notification")
 include(":domain_navigation")
+include(":feature_home")
+include(":feature_settings")

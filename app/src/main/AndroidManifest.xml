@@ -40,10 +40,6 @@
             android:name="com.screensnap.core.screen_recorder.services.ScreenRecorderService"
             android:foregroundServiceType="mediaProjection|microphone" />
 
-        <receiver
-            android:name="com.screensnap.core.screen_recorder.receiver.NotificationReceiver"
-            android:exported="false" />
-
     </application>
 
 </manifest>
