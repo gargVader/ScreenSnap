@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -25,6 +26,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @HiltViewModel
 class HomeViewModel
@@ -37,6 +41,10 @@ constructor(
 ) : ViewModel() {
     var state by mutableStateOf(HomeScreenState())
         private set
+
+    var timer by mutableLongStateOf(0L)
+        private set
+    private var timerJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -57,13 +65,19 @@ constructor(
         }.launchIn(viewModelScope)
     }
 
+    private fun runTimer() = viewModelScope.launch {
+        while (true) {
+            if (!isActive) break
+            delay(1000)
+            timer += 1000
+        }
+    }
+
     fun onEvent(event: HomeScreenEvents) {
         when (event) {
             is HomeScreenEvents.OnStartRecord -> {
-                state =
-                    state.copy(
-                        isRecording = true,
-                    )
+                state = state.copy(isRecording = true)
+                timerJob = runTimer()
                 app.startForegroundService(
                     ScreenRecorderServiceConfig(
                         mediaProjectionResultCode = event.mediaProjectionResultCode,
@@ -74,12 +88,16 @@ constructor(
             }
 
             is HomeScreenEvents.OnStopRecord -> {
-                state = state.copy(isRecording = false)
+                state = state.copy(isRecording = false, isPaused = false)
+                timerJob?.cancel()
+                timer = 0
                 val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
                 app.stopService(screenRecorderServiceIntent)
             }
 
             is HomeScreenEvents.OnPauseRecord -> {
+                state = state.copy(isPaused = true)
+                timerJob?.cancel()
                 val screenRecorderServiceIntent =
                     Intent(app, ScreenRecorderService::class.java).apply {
                         action = ScreenSnapNotification.ACTION_RECORDING_PAUSE
@@ -88,6 +106,8 @@ constructor(
             }
 
             is HomeScreenEvents.OnResumeRecord -> {
+                state = state.copy(isPaused = false)
+                timerJob = runTimer()
                 val screenRecorderServiceIntent =
                     Intent(app, ScreenRecorderService::class.java).apply {
                         action = ScreenSnapNotification.ACTION_RECORDING_RESUME

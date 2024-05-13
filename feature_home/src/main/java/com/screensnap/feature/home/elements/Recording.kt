@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.screensnap.feature.home.Video
+import com.screensnap.feature.home.convertMillisToDisplayDuration
 import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow
@@ -145,17 +146,4 @@ fun convertBytesToDisplaySize(size: Long): String {
 
     // Concatenate the formatted size with the appropriate unit based on the power
     return "$formattedSize ${sizeList[power - 1]}"
-}
-
-fun convertMillisToDisplayDuration(duration: Long): String {
-    val seconds = ceil(duration.toDouble() / 1000)
-    val displaySeconds = (seconds % 60).toInt()
-    val minutes = seconds / 60
-    val displayMinutes = (minutes % 60).toInt()
-    val hours = minutes / 60
-    var result = ""
-    if (hours.toInt() != 0) result += "$hours".padStart(2, ' ') + ":"
-    result += "$displayMinutes".padStart(2, '0') + ":"
-    result += "$displaySeconds".padStart(2, '0')
-    return result
 }

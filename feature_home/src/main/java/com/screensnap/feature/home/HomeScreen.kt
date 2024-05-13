@@ -82,21 +82,35 @@ internal fun HomeScreen(
             })
         },
         floatingActionButton = {
-            RecordFab(isRecording = state.isRecording) {
-                if (state.isRecording) {
-                    viewModel.onEvent(HomeScreenEvents.OnStopRecord)
-                } else {
-                    if (state.audioState != AudioState.Mute && ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.RECORD_AUDIO,
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                    } else {
-                        mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
+            RecordFab(
+                isRecording = state.isRecording,
+                isPaused = state.isPaused,
+                duration = viewModel.timer,
+                onStartRecordClick = {
+                    if (!state.isRecording) {
+                        if (state.audioState != AudioState.Mute && ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.RECORD_AUDIO,
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        } else {
+                            mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
+                        }
+                    }
+                },
+                onPauseRecordClick = {
+                    viewModel.onEvent(HomeScreenEvents.OnPauseRecord)
+                },
+                onResumeRecordClick = {
+                    viewModel.onEvent(HomeScreenEvents.OnResumeRecord)
+                },
+                onStopRecordClick = {
+                    if (state.isRecording) {
+                        viewModel.onEvent(HomeScreenEvents.OnStopRecord)
                     }
                 }
-            }
+            )
         },
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
@@ -106,12 +120,6 @@ internal fun HomeScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp),
             ) {
-                Button(onClick = { viewModel.onEvent(HomeScreenEvents.OnPauseRecord) }) {
-                    Text(text = "Pause")
-                }
-                Button(onClick = { viewModel.onEvent(HomeScreenEvents.OnResumeRecord) }) {
-                    Text(text = "Resume")
-                }
                 HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
                 YourRecordingsHeader()
                 if (state.isListRefreshing) {

@@ -113,13 +113,13 @@ class ScreenRecorderService : Service() {
 
         return Notification.Builder(this, SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
-            .setSmallIcon(R.drawable.baseline_send_24)
+            .setSmallIcon(com.screensnap.core.ui.R.drawable.baseline_send_24)
             .setContentTitle("Screen Snap")
             .setContentText("Recording in progress")
 //            .setStyle(DecoratedCustomViewStyle())
             .addAction(
                 Notification.Action(
-                    R.drawable.baseline_pause_24,
+                    com.screensnap.core.ui.R.drawable.baseline_pause_24,
                     "pause",
                     pausePendingIntent
                 )
