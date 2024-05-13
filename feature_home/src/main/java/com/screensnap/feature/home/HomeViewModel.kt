@@ -15,20 +15,21 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.screensnap.core.datastore.ScreenSnapDatastore
-import com.screensnap.core.screen_recorder.ScreenRecorderRepository
+import com.screensnap.core.screen_recorder.RecorderEvent
+import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
 import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import com.screensnap.core.screen_recorder.services.ScreenRecorderServiceConfig
-import com.screensnap.core.screen_recorder.services.ScreenSnapNotification
+import com.screensnap.core.screen_recorder.services.ScreenSnapNotificationAction
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class HomeViewModel
@@ -37,7 +38,7 @@ constructor(
     private val app: Application,
     private val mediaProjectionManager: MediaProjectionManager,
     private val screenSnapDatastore: ScreenSnapDatastore,
-    private val screenRecorderRepository: ScreenRecorderRepository,
+    private val screenRecorderEventRepository: ScreenRecorderEventRepository,
 ) : ViewModel() {
     var state by mutableStateOf(HomeScreenState())
         private set
@@ -55,12 +56,41 @@ constructor(
             state = state.copy(audioState = it)
         }.launchIn(viewModelScope)
 
-        screenRecorderRepository.collectRecordingState().onEach {
-            if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionStart) {
-                state = state.copy(isListRefreshing = true)
-            } else if (it is com.screensnap.core.screen_recorder.RecordingState.ConversionComplete) {
-                state = state.copy(isListRefreshing = false)
-                loadVideos()
+        screenRecorderEventRepository.collectRecorderEvent().onEach {
+            // Note: This is done so that notification can also control state via the service and
+            // ScreenRecorderEventRepository
+            when (it) {
+                RecorderEvent.RecordingStart -> {
+                    state = state.copy(isRecording = true)
+                    timerJob = runTimer()
+                }
+
+                RecorderEvent.RecordingPaused -> {
+                    state = state.copy(isPaused = true)
+                    timerJob?.cancel()
+                }
+
+                RecorderEvent.RecordingResumed -> {
+                    state = state.copy(isPaused = false)
+                    timerJob = runTimer()
+                }
+
+                RecorderEvent.RecordingStopAndConversionStart -> {
+                    state = state.copy(
+                        isRecording = false, isPaused = false, isListRefreshing = true
+                    )
+                    timerJob?.cancel()
+                    timer = 0
+                }
+
+                RecorderEvent.ConversionComplete -> {
+                    state = state.copy(isListRefreshing = false)
+                    loadVideos()
+                }
+
+                RecorderEvent.NotRecording -> {
+                    // Do nothing
+                }
             }
         }.launchIn(viewModelScope)
     }
@@ -76,41 +106,35 @@ constructor(
     fun onEvent(event: HomeScreenEvents) {
         when (event) {
             is HomeScreenEvents.OnStartRecord -> {
-                state = state.copy(isRecording = true)
-                timerJob = runTimer()
                 app.startForegroundService(
                     ScreenRecorderServiceConfig(
                         mediaProjectionResultCode = event.mediaProjectionResultCode,
                         mediaProjectionData = event.mediaProjectionData,
                         notificationId = 1,
-                    ).toScreenRecorderServiceIntent(app),
+                    ).toScreenRecorderServiceIntent(
+                        app,
+                        ScreenSnapNotificationAction.RECORDING_START
+                    ),
                 )
             }
 
             is HomeScreenEvents.OnStopRecord -> {
-                state = state.copy(isRecording = false, isPaused = false)
-                timerJob?.cancel()
-                timer = 0
                 val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
                 app.stopService(screenRecorderServiceIntent)
             }
 
             is HomeScreenEvents.OnPauseRecord -> {
-                state = state.copy(isPaused = true)
-                timerJob?.cancel()
                 val screenRecorderServiceIntent =
                     Intent(app, ScreenRecorderService::class.java).apply {
-                        action = ScreenSnapNotification.ACTION_RECORDING_PAUSE
+                        action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
                     }
                 app.startService(screenRecorderServiceIntent)
             }
 
             is HomeScreenEvents.OnResumeRecord -> {
-                state = state.copy(isPaused = false)
-                timerJob = runTimer()
                 val screenRecorderServiceIntent =
                     Intent(app, ScreenRecorderService::class.java).apply {
-                        action = ScreenSnapNotification.ACTION_RECORDING_RESUME
+                        action = ScreenSnapNotificationAction.RECORDING_RESUME.value
                     }
                 app.startService(screenRecorderServiceIntent)
             }

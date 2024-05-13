@@ -2,7 +2,6 @@ package com.screensnap.core.screen_recorder.services
 
 import android.content.Context
 import android.content.Intent
-import com.screensnap.core.screen_recorder.receiver.NotificationReceiver
 
 /**
  * Used to initialize [ScreenRecorderService] with values
@@ -12,8 +11,9 @@ data class ScreenRecorderServiceConfig(
     val mediaProjectionData: Intent,
     val notificationId: Int,
 ) {
-    fun toScreenRecorderServiceIntent(context: Context): Intent =
+    fun toScreenRecorderServiceIntent(context: Context, action: ScreenSnapNotificationAction): Intent =
         Intent(context, ScreenRecorderService::class.java).apply {
+            this.action = action.value
             putExtra(KEY_MP_RESULT_CODE, mediaProjectionResultCode)
             putExtra(KEY_MP_DATA, mediaProjectionData)
             putExtra(KEY_NOTIFICATION_ID, notificationId)
@@ -26,7 +26,6 @@ data class ScreenRecorderServiceConfig(
 
         fun createFromScreenRecorderServiceIntent(intent: Intent): ScreenRecorderServiceConfig =
             intent.extras!!.let { extras ->
-                val x = NotificationReceiver::class.java
                 ScreenRecorderServiceConfig(
                     mediaProjectionResultCode = extras.getInt(KEY_MP_RESULT_CODE),
                     mediaProjectionData = extras.getParcelable(KEY_MP_DATA)!!,
