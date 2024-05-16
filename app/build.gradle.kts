@@ -10,6 +10,7 @@ dependencies {
     // Core modules
     implementation(project(":core_ui"))
     implementation(project(":core_screen_recorder"))
+    implementation(project(":core_notification"))
     implementation(project(":core_datastore"))
     // Domain modules
     implementation(project(":domain_navigation"))

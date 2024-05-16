@@ -11,7 +11,7 @@ data class ScreenRecorderServiceConfig(
     val mediaProjectionData: Intent,
     val notificationId: Int,
 ) {
-    fun toScreenRecorderServiceIntent(context: Context, action: ScreenSnapNotificationAction): Intent =
+    fun toScreenRecorderServiceIntent(context: Context, action: com.screensnap.core.notification.ScreenSnapNotificationAction): Intent =
         Intent(context, ScreenRecorderService::class.java).apply {
             this.action = action.value
             putExtra(KEY_MP_RESULT_CODE, mediaProjectionResultCode)

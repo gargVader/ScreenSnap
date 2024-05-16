@@ -1,6 +1,4 @@
-package com.screensnap.core.screen_recorder.services
-
-import com.screensnap.core.screen_recorder.BuildConfig
+package com.screensnap.core.notification
 
 enum class ScreenSnapNotificationAction(val value: String) {
     RECORDING_START(value = createActionName("recording_start")),

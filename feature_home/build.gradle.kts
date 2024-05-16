@@ -10,6 +10,7 @@ dependencies {
     // Project
     implementation(project(":core_datastore"))
     implementation(project(":core_screen_recorder"))
+    implementation(project(":core_notification"))
 }
 
 // Allow references to generated code

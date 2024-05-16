@@ -19,7 +19,7 @@ import com.screensnap.core.screen_recorder.RecorderEvent
 import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
 import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import com.screensnap.core.screen_recorder.services.ScreenRecorderServiceConfig
-import com.screensnap.core.screen_recorder.services.ScreenSnapNotificationAction
+import com.screensnap.core.notification.ScreenSnapNotificationAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -124,18 +124,14 @@ constructor(
             }
 
             is HomeScreenEvents.OnPauseRecord -> {
-                val screenRecorderServiceIntent =
-                    Intent(app, ScreenRecorderService::class.java).apply {
-                        action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
-                    }
+                val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
+                    .apply { action = ScreenSnapNotificationAction.RECORDING_PAUSE.value }
                 app.startService(screenRecorderServiceIntent)
             }
 
             is HomeScreenEvents.OnResumeRecord -> {
-                val screenRecorderServiceIntent =
-                    Intent(app, ScreenRecorderService::class.java).apply {
-                        action = ScreenSnapNotificationAction.RECORDING_RESUME.value
-                    }
+                val screenRecorderServiceIntent = Intent(app, ScreenRecorderService::class.java)
+                    .apply { action = ScreenSnapNotificationAction.RECORDING_RESUME.value }
                 app.startService(screenRecorderServiceIntent)
             }
 

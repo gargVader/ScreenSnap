@@ -13,22 +13,25 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.RemoteViews
 import com.screensnap.core.datastore.ScreenSnapDatastore
-import com.screensnap.core.screen_recorder.R
+import com.screensnap.core.notification.ScreenSnapNotificationAction
+import com.screensnap.core.notification.ScreenSnapNotificationConstants
+import com.screensnap.core.notification.toScreenSnapNotificationAction
+import com.screensnap.core.notification.R
+import com.screensnap.core.notification.ScreenSnapNotificationManager
 import com.screensnap.core.screen_recorder.RecorderEvent
 import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
+import java.io.File
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
-
     @Inject
     lateinit var screenSnapDatastore: ScreenSnapDatastore
 
@@ -47,30 +50,36 @@ class ScreenRecorderService : Service() {
     @OptIn(DelicateCoroutinesApi::class)
     private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
     private val scope = CoroutineScope(singleThreadContext)
+    private lateinit var screenSnapNotificationManager: ScreenSnapNotificationManager
     private lateinit var notificationManager: NotificationManager
     private val notificationId = 1
 
     private val pausePendingIntent: PendingIntent
         get() {
-            val pauseIntent = Intent(this, ScreenRecorderService::class.java).apply {
-                action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
-            }
+            val pauseIntent =
+                Intent(this, ScreenRecorderService::class.java).apply {
+                    action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
+                }
             return PendingIntent.getService(this, 0, pauseIntent, FLAG_IMMUTABLE)
         }
 
     private val resumePendingIntent: PendingIntent
         get() {
-            val resumeIntent = Intent(this, ScreenRecorderService::class.java).apply {
-                action = ScreenSnapNotificationAction.RECORDING_RESUME.value
-            }
+            val resumeIntent =
+                Intent(this, ScreenRecorderService::class.java).apply {
+                    action =
+                        ScreenSnapNotificationAction.RECORDING_RESUME.value
+                }
             return PendingIntent.getService(this, 0, resumeIntent, FLAG_IMMUTABLE)
         }
 
     private val stopPendingIntent: PendingIntent
         get() {
-            val stopIntent = Intent(this, ScreenRecorderService::class.java).apply {
-                action = ScreenSnapNotificationAction.RECORDING_STOP.value
-            }
+            val stopIntent =
+                Intent(this, ScreenRecorderService::class.java).apply {
+                    action =
+                        ScreenSnapNotificationAction.RECORDING_STOP.value
+                }
             return PendingIntent.getService(this, 0, stopIntent, FLAG_IMMUTABLE)
         }
 
@@ -79,6 +88,10 @@ class ScreenRecorderService : Service() {
         flags: Int,
         startId: Int,
     ): Int {
+        screenSnapNotificationManager = ScreenSnapNotificationManager(
+            serviceContext = this,
+            serviceClass = ScreenRecorderService::class.java,
+        )
         val action: ScreenSnapNotificationAction =
             intent.action?.toScreenSnapNotificationAction() ?: return START_STICKY
         when (action) {
@@ -156,7 +169,7 @@ class ScreenRecorderService : Service() {
             view.setViewVisibility(R.id.resume_view, GONE)
         }
 
-        return Notification.Builder(this, SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID)
+        return Notification.Builder(this, ScreenSnapNotificationConstants.CHANNEL_ID)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setSmallIcon(com.screensnap.core.ui.R.drawable.baseline_videocam_24)
             .setContentTitle("Screen Snap")
@@ -213,11 +226,4 @@ class ScreenRecorderService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    companion object {
-        const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_ID = "Screen_Snap_Channel_ID"
-        const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_NAME = "Screen Snap"
-        const val SCREEN_RECORDER_NOTIFICATION_CHANNEL_DESCRIPTION =
-            "To show notifications for Screen Snap"
-    }
 }
