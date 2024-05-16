@@ -3,17 +3,18 @@ package com.screensnap.core.notification
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service.START_NOT_STICKY
 import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
+import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICATION_ID
 
 class ScreenSnapNotificationManager(
     private val serviceContext: Context,
     private val serviceClass: Class<*>,
 ) {
 
-    private val notificationId = 1
     private var notificationManager: NotificationManager =
         serviceContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -77,28 +78,32 @@ class ScreenSnapNotificationManager(
         onPauseRecording: () -> Unit,
         onResumeRecording: () -> Unit,
         onStopRecording: () -> Unit
-    ) {
+    ): Int {
         val action: ScreenSnapNotificationAction =
-            intent.action?.toScreenSnapNotificationAction() ?: return
-        when (action) {
+            intent.action?.toScreenSnapNotificationAction() ?: return START_NOT_STICKY
+        return when (action) {
             ScreenSnapNotificationAction.RECORDING_START -> {
                 onStartRecording()
+                START_NOT_STICKY
             }
 
             ScreenSnapNotificationAction.RECORDING_PAUSE -> {
-                notificationManager.notify(notificationId, createNotification(isPaused = true))
+                notificationManager.notify(NOTIFICATION_ID, createNotification(isPaused = true))
                 onPauseRecording()
+                START_NOT_STICKY
             }
 
             ScreenSnapNotificationAction.RECORDING_RESUME -> {
-                notificationManager.notify(notificationId, createNotification(isPaused = false))
+                notificationManager.notify(NOTIFICATION_ID, createNotification(isPaused = false))
                 onResumeRecording()
+                START_NOT_STICKY
             }
 
             ScreenSnapNotificationAction.RECORDING_STOP -> {
                 onStopRecording()
+                START_NOT_STICKY
             }
         }
-    }
 
+    }
 }

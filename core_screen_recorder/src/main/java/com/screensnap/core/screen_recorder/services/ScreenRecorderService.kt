@@ -1,22 +1,12 @@
 package com.screensnap.core.screen_recorder.services
 
-import android.app.Notification
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
-import android.view.View.GONE
-import android.view.View.VISIBLE
-import android.widget.RemoteViews
 import com.screensnap.core.datastore.ScreenSnapDatastore
-import com.screensnap.core.notification.ScreenSnapNotificationAction
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
-import com.screensnap.core.notification.toScreenSnapNotificationAction
-import com.screensnap.core.notification.R
 import com.screensnap.core.notification.ScreenSnapNotificationManager
 import com.screensnap.core.screen_recorder.RecorderEvent
 import com.screensnap.core.screen_recorder.ScreenRecorder
@@ -50,81 +40,33 @@ class ScreenRecorderService : Service() {
     @OptIn(DelicateCoroutinesApi::class)
     private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
     private val scope = CoroutineScope(singleThreadContext)
-    private lateinit var screenSnapNotificationManager: ScreenSnapNotificationManager
-    private lateinit var notificationManager: NotificationManager
-    private val notificationId = 1
-
-    private val pausePendingIntent: PendingIntent
-        get() {
-            val pauseIntent =
-                Intent(this, ScreenRecorderService::class.java).apply {
-                    action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
-                }
-            return PendingIntent.getService(this, 0, pauseIntent, FLAG_IMMUTABLE)
-        }
-
-    private val resumePendingIntent: PendingIntent
-        get() {
-            val resumeIntent =
-                Intent(this, ScreenRecorderService::class.java).apply {
-                    action =
-                        ScreenSnapNotificationAction.RECORDING_RESUME.value
-                }
-            return PendingIntent.getService(this, 0, resumeIntent, FLAG_IMMUTABLE)
-        }
-
-    private val stopPendingIntent: PendingIntent
-        get() {
-            val stopIntent =
-                Intent(this, ScreenRecorderService::class.java).apply {
-                    action =
-                        ScreenSnapNotificationAction.RECORDING_STOP.value
-                }
-            return PendingIntent.getService(this, 0, stopIntent, FLAG_IMMUTABLE)
-        }
+    private lateinit var notificationManager: ScreenSnapNotificationManager
 
     override fun onStartCommand(
         intent: Intent,
         flags: Int,
         startId: Int,
     ): Int {
-        screenSnapNotificationManager = ScreenSnapNotificationManager(
+        notificationManager = ScreenSnapNotificationManager(
             serviceContext = this,
             serviceClass = ScreenRecorderService::class.java,
         )
-        val action: ScreenSnapNotificationAction =
-            intent.action?.toScreenSnapNotificationAction() ?: return START_STICKY
-        when (action) {
-            ScreenSnapNotificationAction.RECORDING_START -> {
-                onStartRecording(intent)
-            }
-
-            ScreenSnapNotificationAction.RECORDING_PAUSE -> {
-                onPauseRecording()
-            }
-
-            ScreenSnapNotificationAction.RECORDING_RESUME -> {
-                onResumeRecording()
-            }
-
-            ScreenSnapNotificationAction.RECORDING_STOP -> {
-                onStopRecording()
-            }
-        }
-        return START_STICKY
+        return notificationManager.handleIntent(
+            intent = intent,
+            onStartRecording = { onStartRecording(intent) },
+            onPauseRecording = ::onPauseRecording,
+            onResumeRecording = ::onResumeRecording,
+            onStopRecording = ::onStopRecording,
+        )
     }
 
-    private fun onStartRecording(intent: Intent): Int {
+    private fun onStartRecording(intent: Intent) {
+        // Start notification for service
+        val notification = notificationManager.createNotification()
+        startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
+
         // Extract info
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent)
-
-        // Start notification for service
-        startForeground(
-            notificationId,
-            createNotification(),
-        )
-
-        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mediaProjection =
             createMediaProjection(config.mediaProjectionResultCode, config.mediaProjectionData)
         screenRecorder = createScreenRecorder()
@@ -133,49 +75,20 @@ class ScreenRecorderService : Service() {
             repository.publishRecorderEvent(RecorderEvent.RecordingStart)
             screenRecorder.startRecording()
         }
-
-        return START_NOT_STICKY
     }
 
     private fun onPauseRecording() {
-        notificationManager.notify(notificationId, createNotification(isPaused = true))
         repository.publishRecorderEvent(RecorderEvent.RecordingPaused)
         screenRecorder.pauseRecording()
     }
 
     private fun onResumeRecording() {
-        notificationManager.notify(notificationId, createNotification(isPaused = false))
         repository.publishRecorderEvent(RecorderEvent.RecordingResumed)
         screenRecorder.resumeRecording()
     }
 
     private fun onStopRecording() {
         stopSelf()
-    }
-
-    // Notification for foreground service
-    private fun createNotification(isPaused: Boolean = false): Notification {
-        val view = RemoteViews("com.screensnap.app", R.layout.notification)
-
-        view.setOnClickPendingIntent(R.id.pause_view, pausePendingIntent)
-        view.setOnClickPendingIntent(R.id.resume_view, resumePendingIntent)
-        view.setOnClickPendingIntent(R.id.stop_view, stopPendingIntent)
-
-        if (isPaused) {
-            view.setViewVisibility(R.id.pause_view, GONE)
-            view.setViewVisibility(R.id.resume_view, VISIBLE)
-        } else {
-            view.setViewVisibility(R.id.pause_view, VISIBLE)
-            view.setViewVisibility(R.id.resume_view, GONE)
-        }
-
-        return Notification.Builder(this, ScreenSnapNotificationConstants.CHANNEL_ID)
-            .setVisibility(Notification.VISIBILITY_PUBLIC)
-            .setSmallIcon(com.screensnap.core.ui.R.drawable.baseline_videocam_24)
-            .setContentTitle("Screen Snap")
-            .setStyle(Notification.DecoratedCustomViewStyle())
-            .setCustomContentView(view)
-            .build()
     }
 
     private fun createMediaProjection(
