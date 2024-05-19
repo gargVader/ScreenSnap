@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -33,6 +34,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.screensnap.core.camera.FloatingCameraService
+import com.screensnap.core.camera.hasOverlayDisplayPermission
+import com.screensnap.core.camera.requestOverlayDisplayPermission
 import com.screensnap.core.datastore.AudioState
 import com.screensnap.feature.home.elements.HomeChips
 import com.screensnap.feature.home.elements.RecordFab
@@ -63,6 +67,15 @@ internal fun HomeScreen(
     val audioPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
+            } else {
+                Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
+            }
+        }
+
+    val cameraPermissionLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                openCamera(context)
             } else {
                 Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
             }
@@ -120,6 +133,28 @@ internal fun HomeScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp),
             ) {
+                Button(onClick = {
+                    // Check overlay permission
+                    if (!hasOverlayDisplayPermission(context)) {
+                        requestOverlayDisplayPermission(context, context as Activity)
+                    } else {
+                        // Check for camera permission
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        } else {
+                            openCamera(context)
+                        }
+                    }
+
+
+                }) {
+                    Text(text = "Camera")
+                }
+
                 HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
                 YourRecordingsHeader()
                 if (state.isListRefreshing) {
@@ -133,18 +168,11 @@ internal fun HomeScreen(
                 }
             }
         }
-
-//        Box(modifier = Modifier.fillMaxSize()) {
-//            RecordFab(
-//                modifier = Modifier.align(Alignment.BottomEnd),
-//                isRecording = state.isRecording
-//            ) {
-//                if (state.isRecording) {
-//                    viewModel.onEvent(HomeScreenEvents.OnStopRecord)
-//                } else {
-//                    mediaProjectionPermissionLauncher.launch(viewModel.getScreenCapturePermissionIntent())
-//                }
-//            }
-//        }
     }
 }
+
+fun openCamera(context: Context) {
+    context.startService(Intent(context, FloatingCameraService::class.java))
+}
+
+
