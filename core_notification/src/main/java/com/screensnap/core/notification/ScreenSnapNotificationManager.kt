@@ -80,7 +80,7 @@ class ScreenSnapNotificationManager(
         onStopRecording: () -> Unit
     ): Int {
         val action: ScreenSnapNotificationAction =
-            intent.action?.toScreenSnapNotificationAction() ?: return START_NOT_STICKY
+            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
         return when (action) {
             ScreenSnapNotificationAction.RECORDING_START -> {
                 onStartRecording()
