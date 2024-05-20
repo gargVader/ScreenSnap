@@ -57,10 +57,11 @@ fun CameraPreview(
     val context = LocalContext.current
 
     val controller = remember {
-        LifecycleCameraController(context)
+        LifecycleCameraController(context).apply {
+            cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        }
     }
 
-    controller.cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
     Column(modifier = Modifier.clickable {
         Log.d("Girish", "CameraPreview: onClick")
     }) {

@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission
@@ -46,7 +47,8 @@
             android:name="com.screensnap.core.screen_recorder.services.ScreenRecorderService"
             android:foregroundServiceType="mediaProjection|microphone" />
 
-        <service android:name="com.screensnap.core.camera.FloatingCameraService" />
+        <service android:name="com.screensnap.core.camera.FloatingCameraService"
+            android:foregroundServiceType="camera"/>
 
     </application>
 
