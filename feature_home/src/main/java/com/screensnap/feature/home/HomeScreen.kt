@@ -75,7 +75,7 @@ internal fun HomeScreen(
     val cameraPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                openCamera(context)
+                viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
             } else {
                 Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
             }
@@ -146,7 +146,7 @@ internal fun HomeScreen(
                         ) {
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         } else {
-                            openCamera(context)
+                            viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
                         }
                     }
 
@@ -170,9 +170,4 @@ internal fun HomeScreen(
         }
     }
 }
-
-fun openCamera(context: Context) {
-    context.startService(Intent(context, FloatingCameraService::class.java))
-}
-
 

@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.screensnap.core.camera.FloatingCameraService
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.screen_recorder.RecorderEvent
 import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
@@ -140,6 +141,10 @@ constructor(
                 viewModelScope.launch {
                     screenSnapDatastore.saveAudioState(event.audioState)
                 }
+            }
+
+            is HomeScreenEvents.onLaunchCamera -> {
+                app.startService(Intent(app, FloatingCameraService::class.java))
             }
         }
     }

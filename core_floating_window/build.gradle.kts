@@ -1,16 +1,15 @@
 plugins {
     id("com.screensnap.plugin.core")
-    id("com.screensnap.plugin.extra.camera")
     id("com.screensnap.plugin.extra.compose")
 }
 
 android {
-    namespace = "com.screensnap.core.camera"
+    namespace = "com.screensnap.core.floating_window"
 }
 
 dependencies {
     // Project
-    implementation(project(":core_floating_window"))
+
 }
 
 // Allow references to generated code
