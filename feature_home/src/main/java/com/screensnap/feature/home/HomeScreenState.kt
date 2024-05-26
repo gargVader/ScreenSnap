@@ -8,4 +8,5 @@ data class HomeScreenState(
     val isListRefreshing: Boolean = false,
     val videoList: List<Video>? = null,
     val audioState: AudioState = AudioState.Mute,
+    val isCameraOn: Boolean = false,
 )

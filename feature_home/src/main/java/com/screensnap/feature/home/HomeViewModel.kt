@@ -16,8 +16,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.screensnap.core.camera.FloatingCameraService
 import com.screensnap.core.datastore.ScreenSnapDatastore
-import com.screensnap.core.screen_recorder.RecorderEvent
-import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
+import com.screensnap.core.notification.NotificationState
+import com.screensnap.core.notification.NotificationEvent
+import com.screensnap.core.notification.NotificationEventRepository
 import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import com.screensnap.core.screen_recorder.services.ScreenRecorderServiceConfig
 import com.screensnap.core.notification.ScreenSnapNotificationAction
@@ -39,7 +40,7 @@ constructor(
     private val app: Application,
     private val mediaProjectionManager: MediaProjectionManager,
     private val screenSnapDatastore: ScreenSnapDatastore,
-    private val screenRecorderEventRepository: ScreenRecorderEventRepository,
+    private val notificationEventRepository: NotificationEventRepository,
 ) : ViewModel() {
     var state by mutableStateOf(HomeScreenState())
         private set
@@ -57,26 +58,26 @@ constructor(
             state = state.copy(audioState = it)
         }.launchIn(viewModelScope)
 
-        screenRecorderEventRepository.collectRecorderEvent().onEach {
+        notificationEventRepository.collectEvent().onEach {
             // Note: This is done so that notification can also control state via the service and
             // ScreenRecorderEventRepository
             when (it) {
-                RecorderEvent.RecordingStart -> {
+                NotificationEvent.RecordingStart -> {
                     state = state.copy(isRecording = true)
                     timerJob = runTimer()
                 }
 
-                RecorderEvent.RecordingPaused -> {
+                NotificationEvent.RecordingPaused -> {
                     state = state.copy(isPaused = true)
                     timerJob?.cancel()
                 }
 
-                RecorderEvent.RecordingResumed -> {
+                NotificationEvent.RecordingResumed -> {
                     state = state.copy(isPaused = false)
                     timerJob = runTimer()
                 }
 
-                RecorderEvent.RecordingStopAndConversionStart -> {
+                NotificationEvent.RecordingStopAndConversionStart -> {
                     state = state.copy(
                         isRecording = false, isPaused = false, isListRefreshing = true
                     )
@@ -84,13 +85,17 @@ constructor(
                     timer = 0
                 }
 
-                RecorderEvent.ConversionComplete -> {
+                NotificationEvent.ConversionComplete -> {
                     state = state.copy(isListRefreshing = false)
                     loadVideos()
                 }
 
-                RecorderEvent.NotRecording -> {
+                NotificationEvent.NotRecording -> {
                     // Do nothing
+                }
+
+                NotificationEvent.Close -> {
+                    state = state.copy(isCameraOn = false)
                 }
             }
         }.launchIn(viewModelScope)
@@ -144,7 +149,21 @@ constructor(
             }
 
             is HomeScreenEvents.onLaunchCamera -> {
-                app.startService(Intent(app, FloatingCameraService::class.java))
+                val cameraIntent = Intent(app, FloatingCameraService::class.java).apply {
+                    action = ScreenSnapNotificationAction.LAUNCH_CAMERA.value
+                    putExtra(
+                        FloatingCameraService.KEY_NOTIFICATION_STATE,
+                        NotificationState.fromHomeState(state.isRecording, state.isPaused).name
+                    )
+                }
+                app.startForegroundService(cameraIntent)
+                state = state.copy(isCameraOn = true)
+            }
+
+            is HomeScreenEvents.onCloseCamera -> {
+                val cameraIntent = Intent(app, FloatingCameraService::class.java)
+                app.stopService(cameraIntent)
+                state = state.copy(isCameraOn = false)
             }
         }
     }
@@ -154,7 +173,6 @@ constructor(
     }
 
     private fun loadVideos() {
-        Log.d("Girish", "loadVideos: ")
         viewModelScope.launch {
             val videos = queryVideos()
             withContext(Dispatchers.Main) {

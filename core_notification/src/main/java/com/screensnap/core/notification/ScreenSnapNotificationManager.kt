@@ -12,65 +12,49 @@ import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICA
 
 class ScreenSnapNotificationManager(
     private val serviceContext: Context,
-    private val screenRecorderServiceClass: Class<*>,
+    private val startPendingIntent: PendingIntent? = null,
+    private val pausePendingIntent: PendingIntent? = null,
+    private val resumePendingIntent: PendingIntent? = null,
+    private val stopPendingIntent: PendingIntent? = null,
+    private val closePendingIntent: PendingIntent? = null,
 ) {
 
     private var notificationManager: NotificationManager =
         serviceContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    private val pausePendingIntent: PendingIntent
-        get() {
-            val pauseIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
-                action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
-            }
-            return PendingIntent.getService(
-                serviceContext, 0, pauseIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-
-    private val resumePendingIntent: PendingIntent
-        get() {
-            val resumeIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
-                action = ScreenSnapNotificationAction.RECORDING_RESUME.value
-            }
-            return PendingIntent.getService(
-                serviceContext, 0, resumeIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-
-    private val stopPendingIntent: PendingIntent
-        get() {
-            val stopIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
-                action = ScreenSnapNotificationAction.RECORDING_STOP.value
-            }
-            return PendingIntent.getService(
-                serviceContext, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-
-    private val startPendingIntent: PendingIntent
-        get() {
-            val startIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
-                action = ScreenSnapNotificationAction.RECORDING_START.value
-            }
-            return PendingIntent.getService(
-                serviceContext, 0, startIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-        }
-
-    fun createNotification(isPaused: Boolean = false): Notification {
+    fun createNotification(notificationState: NotificationState = NotificationState.NOT_RECORDING): Notification {
         val view = RemoteViews("com.screensnap.app", R.layout.notification)
 
+        view.setOnClickPendingIntent(R.id.start_view, startPendingIntent)
         view.setOnClickPendingIntent(R.id.pause_view, pausePendingIntent)
         view.setOnClickPendingIntent(R.id.resume_view, resumePendingIntent)
         view.setOnClickPendingIntent(R.id.stop_view, stopPendingIntent)
+        view.setOnClickPendingIntent(R.id.close_view, closePendingIntent)
 
-        if (isPaused) {
-            view.setViewVisibility(R.id.pause_view, View.GONE)
-            view.setViewVisibility(R.id.resume_view, View.VISIBLE)
-        } else {
-            view.setViewVisibility(R.id.pause_view, View.VISIBLE)
-            view.setViewVisibility(R.id.resume_view, View.GONE)
+        when (notificationState) {
+            NotificationState.NOT_RECORDING -> {
+                view.setViewVisibility(R.id.start_view, View.VISIBLE)
+                view.setViewVisibility(R.id.pause_view, View.GONE)
+                view.setViewVisibility(R.id.resume_view, View.GONE)
+                view.setViewVisibility(R.id.stop_view, View.GONE)
+                view.setViewVisibility(R.id.close_view, View.VISIBLE)
+            }
+
+            NotificationState.RECORDING -> {
+                view.setViewVisibility(R.id.start_view, View.GONE)
+                view.setViewVisibility(R.id.pause_view, View.VISIBLE)
+                view.setViewVisibility(R.id.resume_view, View.GONE)
+                view.setViewVisibility(R.id.stop_view, View.VISIBLE)
+                view.setViewVisibility(R.id.close_view, View.GONE)
+            }
+
+            NotificationState.RECORDING_PAUSED -> {
+                view.setViewVisibility(R.id.start_view, View.GONE)
+                view.setViewVisibility(R.id.pause_view, View.GONE)
+                view.setViewVisibility(R.id.resume_view, View.VISIBLE)
+                view.setViewVisibility(R.id.stop_view, View.VISIBLE)
+                view.setViewVisibility(R.id.close_view, View.GONE)
+            }
         }
 
         return Notification.Builder(serviceContext, ScreenSnapNotificationConstants.CHANNEL_ID)
@@ -82,13 +66,12 @@ class ScreenSnapNotificationManager(
             .build()
     }
 
-    fun handleIntent(
+    fun handleIntentForScreenRecorder(
         intent: Intent,
         onStartRecording: () -> Unit,
         onPauseRecording: () -> Unit,
         onResumeRecording: () -> Unit,
         onStopRecording: () -> Unit,
-        onLaunchCamera: () -> Unit,
     ): Int {
         val action: ScreenSnapNotificationAction =
             ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
@@ -99,13 +82,19 @@ class ScreenSnapNotificationManager(
             }
 
             ScreenSnapNotificationAction.RECORDING_PAUSE -> {
-                notificationManager.notify(NOTIFICATION_ID, createNotification(isPaused = true))
+                notificationManager.notify(
+                    NOTIFICATION_ID,
+                    createNotification(NotificationState.RECORDING_PAUSED)
+                )
                 onPauseRecording()
                 START_NOT_STICKY
             }
 
             ScreenSnapNotificationAction.RECORDING_RESUME -> {
-                notificationManager.notify(NOTIFICATION_ID, createNotification(isPaused = false))
+                notificationManager.notify(
+                    NOTIFICATION_ID,
+                    createNotification(NotificationState.RECORDING)
+                )
                 onResumeRecording()
                 START_NOT_STICKY
             }
@@ -114,12 +103,35 @@ class ScreenSnapNotificationManager(
                 onStopRecording()
                 START_NOT_STICKY
             }
-            
+
+            else -> {
+                START_NOT_STICKY
+            }
+        }
+    }
+
+    fun handleIntentForFloatingCamera(
+        intent: Intent,
+        onLaunchCamera: () -> Unit,
+        onClose: () -> Unit
+    ): Int {
+        val action: ScreenSnapNotificationAction =
+            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
+        return when (action) {
             ScreenSnapNotificationAction.LAUNCH_CAMERA -> {
                 onLaunchCamera()
                 START_NOT_STICKY
             }
-        }
 
+            ScreenSnapNotificationAction.CLOSE -> {
+                onClose()
+                START_NOT_STICKY
+            }
+
+            else -> {
+                START_NOT_STICKY
+            }
+
+        }
     }
 }

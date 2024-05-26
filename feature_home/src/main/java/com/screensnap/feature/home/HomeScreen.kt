@@ -77,7 +77,7 @@ internal fun HomeScreen(
             if (isGranted) {
                 viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
             } else {
-                Toast.makeText(context, "Access to MIC denied", LENGTH_SHORT).show()
+                Toast.makeText(context, "Access to camera denied", LENGTH_SHORT).show()
             }
         }
 
@@ -133,29 +133,11 @@ internal fun HomeScreen(
                     .fillMaxSize()
                     .padding(start = 16.dp, end = 16.dp),
             ) {
-                Button(onClick = {
-                    // Check overlay permission
-                    if (!hasOverlayDisplayPermission(context)) {
-                        requestOverlayDisplayPermission(context, context as Activity)
-                    } else {
-                        // Check for camera permission
-                        if (ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.CAMERA
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                        } else {
-                            viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
-                        }
-                    }
-
-
-                }) {
-                    Text(text = "Camera")
-                }
-
-                HomeChips(viewModel = viewModel, audioPermissionLauncher = audioPermissionLauncher)
+                HomeChips(
+                    viewModel = viewModel,
+                    audioPermissionLauncher = audioPermissionLauncher,
+                    cameraPermissionLauncher = cameraPermissionLauncher
+                )
                 YourRecordingsHeader()
                 if (state.isListRefreshing) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

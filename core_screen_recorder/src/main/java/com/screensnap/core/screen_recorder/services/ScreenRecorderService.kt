@@ -5,13 +5,14 @@ import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
-import com.screensnap.core.camera.FloatingCameraService
 import com.screensnap.core.datastore.ScreenSnapDatastore
+import com.screensnap.core.notification.NotificationState
+import com.screensnap.core.notification.ScreenRecorderPendingIntentProvider
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
-import com.screensnap.core.screen_recorder.RecorderEvent
+import com.screensnap.core.notification.NotificationEvent
 import com.screensnap.core.screen_recorder.ScreenRecorder
-import com.screensnap.core.screen_recorder.ScreenRecorderEventRepository
+import com.screensnap.core.notification.NotificationEventRepository
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class ScreenRecorderService : Service() {
+
     @Inject
     lateinit var screenSnapDatastore: ScreenSnapDatastore
 
@@ -33,15 +35,22 @@ class ScreenRecorderService : Service() {
     lateinit var recorderConfigValues: RecorderConfigValues
 
     @Inject
-    lateinit var repository: ScreenRecorderEventRepository
+    lateinit var repository: NotificationEventRepository
 
     private lateinit var mediaProjection: MediaProjection
     private lateinit var screenRecorder: ScreenRecorder
+    private lateinit var pendingIntentProvider: ScreenRecorderPendingIntentProvider
 
     @OptIn(DelicateCoroutinesApi::class)
     private val singleThreadContext = newSingleThreadContext("Screen Snap Thread")
     private val scope = CoroutineScope(singleThreadContext)
     private lateinit var notificationManager: ScreenSnapNotificationManager
+
+    override fun onCreate() {
+        super.onCreate()
+        pendingIntentProvider =
+            ScreenRecorderPendingIntentProvider(this, ScreenRecorderService::class.java)
+    }
 
     override fun onStartCommand(
         intent: Intent,
@@ -50,21 +59,24 @@ class ScreenRecorderService : Service() {
     ): Int {
         notificationManager = ScreenSnapNotificationManager(
             serviceContext = this,
-            screenRecorderServiceClass = ScreenRecorderService::class.java,
+            startPendingIntent = pendingIntentProvider.startPendingIntent,
+            pausePendingIntent = pendingIntentProvider.pausePendingIntent,
+            resumePendingIntent = pendingIntentProvider.resumePendingIntent,
+            stopPendingIntent = pendingIntentProvider.stopPendingIntent,
         )
-        return notificationManager.handleIntent(
+        return notificationManager.handleIntentForScreenRecorder(
             intent = intent,
             onStartRecording = { onStartRecording(intent) },
-            onPauseRecording = ::onPauseRecording,
-            onResumeRecording = ::onResumeRecording,
-            onStopRecording = ::onStopRecording,
-            onLaunchCamera = {}
+            onPauseRecording = { onPauseRecording() },
+            onResumeRecording = { onResumeRecording() },
+            onStopRecording = { onStopRecording() },
         )
     }
 
     private fun onStartRecording(intent: Intent) {
         // Start notification for service
-        val notification = notificationManager.createNotification()
+        val notification =
+            notificationManager.createNotification(notificationState = NotificationState.RECORDING)
         startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
 
         // Extract info
@@ -74,23 +86,22 @@ class ScreenRecorderService : Service() {
         screenRecorder = createScreenRecorder()
 
         scope.launch {
-            repository.publishRecorderEvent(RecorderEvent.RecordingStart)
+            repository.publishEvent(NotificationEvent.RecordingStart)
             screenRecorder.startRecording()
         }
     }
 
     private fun onPauseRecording() {
-        repository.publishRecorderEvent(RecorderEvent.RecordingPaused)
+        repository.publishEvent(NotificationEvent.RecordingPaused)
         screenRecorder.pauseRecording()
     }
 
     private fun onResumeRecording() {
-        repository.publishRecorderEvent(RecorderEvent.RecordingResumed)
+        repository.publishEvent(NotificationEvent.RecordingResumed)
         screenRecorder.resumeRecording()
     }
 
     private fun onStopRecording() {
-        stopService(Intent(this, FloatingCameraService::class.java))
         stopSelf()
     }
 
@@ -134,9 +145,9 @@ class ScreenRecorderService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         scope.launch {
-            repository.publishRecorderEvent(RecorderEvent.RecordingStopAndConversionStart)
+            repository.publishEvent(NotificationEvent.RecordingStopAndConversionStart)
             screenRecorder.stopRecording()
-            repository.publishRecorderEvent(RecorderEvent.ConversionComplete)
+            repository.publishEvent(NotificationEvent.ConversionComplete)
         }
         mediaProjection.stop()
     }

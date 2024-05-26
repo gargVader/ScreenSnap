@@ -1,6 +1,7 @@
 package com.screensnap.feature.home.elements
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.NoPhotography
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -17,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.screensnap.core.camera.hasOverlayDisplayPermission
+import com.screensnap.core.camera.requestOverlayDisplayPermission
 import com.screensnap.feature.home.HomeScreenEvents
 import com.screensnap.feature.home.HomeViewModel
 
@@ -25,6 +30,7 @@ import com.screensnap.feature.home.HomeViewModel
 fun HomeChips(
     viewModel: HomeViewModel,
     audioPermissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
+    cameraPermissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
 ) {
     val context = LocalContext.current
     val state = viewModel.state
@@ -103,6 +109,39 @@ fun HomeChips(
                         }
                 }
             },
+        )
+        FilterChip(
+            selected = state.isCameraOn,
+            onClick = {
+                if (state.isCameraOn) {
+                    viewModel.onEvent(HomeScreenEvents.onCloseCamera)
+                } else {
+
+                    // Check overlay permission
+                    if (!hasOverlayDisplayPermission(context)) {
+                        requestOverlayDisplayPermission(context, context as Activity)
+                    } else {
+                        // Check for camera permission
+                        if (ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.CAMERA
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        } else {
+                            viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
+                        }
+                    }
+                }
+            },
+            label = { Text(text = "Camera") },
+            leadingIcon = {
+                if (state.isCameraOn) {
+                    Icon(Icons.Default.PhotoCamera, null)
+                } else {
+                    Icon(Icons.Default.NoPhotography, null)
+                }
+            }
         )
     }
 }

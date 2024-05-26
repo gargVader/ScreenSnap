@@ -26,14 +26,22 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.screensnap.core.notification.FloatingCameraPendingIntentProvider
+import com.screensnap.core.notification.NotificationEvent
+import com.screensnap.core.notification.NotificationEventRepository
+import com.screensnap.core.notification.NotificationState
+import com.screensnap.core.notification.ScreenRecorderPendingIntentProvider
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStoreOwner {
 
 
@@ -47,58 +55,23 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
     private lateinit var windowManager: WindowManager
 
     private var shouldShowControls by mutableStateOf(false)
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
-    private var coroutineJob: Job? = null
+    private val cameraCoroutineScope = CoroutineScope(Dispatchers.Default)
+    private var cameraJob: Job? = null
 
     private lateinit var notificationManager: ScreenSnapNotificationManager
+    private lateinit var pendingIntentProvider: FloatingCameraPendingIntentProvider
 
-    private fun createOnTouchListener(
-        view: View,
-        floatingWindowLayoutParameters: WindowManager.LayoutParams
-    ) = object : View.OnTouchListener {
-        private var initialX = 0.0
-        private var initialY = 0.0
-        private var initialTouchX = 0.0
-        private var initialTouchY = 0.0
-
-        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-            when (event?.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    initialX = floatingWindowLayoutParameters.x.toDouble()
-                    initialY = floatingWindowLayoutParameters.y.toDouble()
-                    initialTouchX = event.rawX.toDouble()
-                    initialTouchY = event.rawY.toDouble()
-                    shouldShowControls = true
-                    coroutineJob?.cancel()
-                    coroutineJob = coroutineScope.launch {
-                        delay(5000)
-                        shouldShowControls = false
-                    }
-                    return true
-                }
-
-                MotionEvent.ACTION_UP -> {
-                    return true
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-                    floatingWindowLayoutParameters.x =
-                        (initialX + event.rawX - initialTouchX).toInt()
-                    floatingWindowLayoutParameters.y =
-                        (initialY + event.rawY - initialTouchY).toInt()
-                    windowManager.updateViewLayout(view, floatingWindowLayoutParameters)
-                    return true
-                }
-            }
-            return false
-        }
-    }
+    @Inject
+    lateinit var repository: NotificationEventRepository
 
     override fun onCreate() {
         super.onCreate()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         enableSavedStateHandles()
+
+        pendingIntentProvider =
+            FloatingCameraPendingIntentProvider(this, FloatingCameraService::class.java)
 
         val floatingWindowLayoutParameters = WindowManager.LayoutParams().apply {
             this.height = WindowManager.LayoutParams.WRAP_CONTENT
@@ -137,17 +110,35 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
         windowManager.addView(floatingView, floatingWindowLayoutParameters)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         notificationManager = ScreenSnapNotificationManager(
             serviceContext = this,
-            screenRecorderServiceClass = FloatingCameraService::class.java,
+            closePendingIntent = pendingIntentProvider.closePendingIntent,
         )
-        val notification = notificationManager.createNotification()
-        startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
-
-        return START_STICKY
+        return notificationManager.handleIntentForFloatingCamera(
+            intent = intent,
+            onLaunchCamera = { onLaunchCamera(intent) },
+            onClose = { onClose() }
+        )
     }
+
+    private fun onLaunchCamera(intent: Intent) {
+        // Extract info
+        val notificationState = NotificationState.valueOf(
+            intent.getStringExtra(KEY_NOTIFICATION_STATE) ?: NotificationState.NOT_RECORDING.name
+        )
+
+        val notification =
+            notificationManager.createNotification(notificationState = notificationState)
+        startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
+    }
+
+    private fun onClose() {
+        repository.publishEvent(NotificationEvent.Close)
+        stopSelf()
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -157,5 +148,52 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")
+    }
+
+    private fun createOnTouchListener(
+        view: View,
+        floatingWindowLayoutParameters: WindowManager.LayoutParams
+    ) = object : View.OnTouchListener {
+        private var initialX = 0.0
+        private var initialY = 0.0
+        private var initialTouchX = 0.0
+        private var initialTouchY = 0.0
+
+        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+            when (event?.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = floatingWindowLayoutParameters.x.toDouble()
+                    initialY = floatingWindowLayoutParameters.y.toDouble()
+                    initialTouchX = event.rawX.toDouble()
+                    initialTouchY = event.rawY.toDouble()
+                    shouldShowControls = true
+                    cameraJob?.cancel()
+                    cameraJob = cameraCoroutineScope.launch {
+                        delay(5000)
+                        shouldShowControls = false
+                    }
+                    return true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    return true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    floatingWindowLayoutParameters.x =
+                        (initialX + event.rawX - initialTouchX).toInt()
+                    floatingWindowLayoutParameters.y =
+                        (initialY + event.rawY - initialTouchY).toInt()
+                    windowManager.updateViewLayout(view, floatingWindowLayoutParameters)
+                    return true
+                }
+            }
+            return false
+        }
+    }
+
+    companion object {
+        const val KEY_NOTIFICATION_STATE = "notificationState"
+
     }
 }
