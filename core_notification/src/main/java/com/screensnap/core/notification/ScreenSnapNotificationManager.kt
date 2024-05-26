@@ -100,6 +100,10 @@ class ScreenSnapNotificationManager(
             }
 
             ScreenSnapNotificationAction.RECORDING_STOP -> {
+                notificationManager.notify(
+                    NOTIFICATION_ID,
+                    createNotification(NotificationState.NOT_RECORDING)
+                )
                 onStopRecording()
                 START_NOT_STICKY
             }
