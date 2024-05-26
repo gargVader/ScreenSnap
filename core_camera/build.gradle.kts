@@ -11,6 +11,7 @@ android {
 dependencies {
     // Project
     implementation(project(":core_floating_window"))
+    implementation(project(":core_notification"))
 }
 
 // Allow references to generated code

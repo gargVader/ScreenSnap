@@ -12,7 +12,7 @@ import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICA
 
 class ScreenSnapNotificationManager(
     private val serviceContext: Context,
-    private val serviceClass: Class<*>,
+    private val screenRecorderServiceClass: Class<*>,
 ) {
 
     private var notificationManager: NotificationManager =
@@ -20,7 +20,7 @@ class ScreenSnapNotificationManager(
 
     private val pausePendingIntent: PendingIntent
         get() {
-            val pauseIntent = Intent(serviceContext, serviceClass).apply {
+            val pauseIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
                 action = ScreenSnapNotificationAction.RECORDING_PAUSE.value
             }
             return PendingIntent.getService(
@@ -30,7 +30,7 @@ class ScreenSnapNotificationManager(
 
     private val resumePendingIntent: PendingIntent
         get() {
-            val resumeIntent = Intent(serviceContext, serviceClass).apply {
+            val resumeIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
                 action = ScreenSnapNotificationAction.RECORDING_RESUME.value
             }
             return PendingIntent.getService(
@@ -40,11 +40,21 @@ class ScreenSnapNotificationManager(
 
     private val stopPendingIntent: PendingIntent
         get() {
-            val stopIntent = Intent(serviceContext, serviceClass).apply {
+            val stopIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
                 action = ScreenSnapNotificationAction.RECORDING_STOP.value
             }
             return PendingIntent.getService(
                 serviceContext, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+    private val startPendingIntent: PendingIntent
+        get() {
+            val startIntent = Intent(serviceContext, screenRecorderServiceClass).apply {
+                action = ScreenSnapNotificationAction.RECORDING_START.value
+            }
+            return PendingIntent.getService(
+                serviceContext, 0, startIntent, PendingIntent.FLAG_IMMUTABLE
             )
         }
 
@@ -77,7 +87,8 @@ class ScreenSnapNotificationManager(
         onStartRecording: () -> Unit,
         onPauseRecording: () -> Unit,
         onResumeRecording: () -> Unit,
-        onStopRecording: () -> Unit
+        onStopRecording: () -> Unit,
+        onLaunchCamera: () -> Unit,
     ): Int {
         val action: ScreenSnapNotificationAction =
             ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
@@ -101,6 +112,11 @@ class ScreenSnapNotificationManager(
 
             ScreenSnapNotificationAction.RECORDING_STOP -> {
                 onStopRecording()
+                START_NOT_STICKY
+            }
+            
+            ScreenSnapNotificationAction.LAUNCH_CAMERA -> {
+                onLaunchCamera()
                 START_NOT_STICKY
             }
         }

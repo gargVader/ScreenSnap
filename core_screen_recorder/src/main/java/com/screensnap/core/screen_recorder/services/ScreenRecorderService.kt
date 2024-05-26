@@ -5,6 +5,7 @@ import android.content.Intent
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
+import com.screensnap.core.camera.FloatingCameraService
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
@@ -49,7 +50,7 @@ class ScreenRecorderService : Service() {
     ): Int {
         notificationManager = ScreenSnapNotificationManager(
             serviceContext = this,
-            serviceClass = ScreenRecorderService::class.java,
+            screenRecorderServiceClass = ScreenRecorderService::class.java,
         )
         return notificationManager.handleIntent(
             intent = intent,
@@ -57,6 +58,7 @@ class ScreenRecorderService : Service() {
             onPauseRecording = ::onPauseRecording,
             onResumeRecording = ::onResumeRecording,
             onStopRecording = ::onStopRecording,
+            onLaunchCamera = {}
         )
     }
 
@@ -88,6 +90,7 @@ class ScreenRecorderService : Service() {
     }
 
     private fun onStopRecording() {
+        stopService(Intent(this, FloatingCameraService::class.java))
         stopSelf()
     }
 

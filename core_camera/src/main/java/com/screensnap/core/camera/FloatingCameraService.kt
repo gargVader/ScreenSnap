@@ -26,6 +26,8 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.screensnap.core.notification.ScreenSnapNotificationConstants
+import com.screensnap.core.notification.ScreenSnapNotificationManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,6 +49,8 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
     private var shouldShowControls by mutableStateOf(false)
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     private var coroutineJob: Job? = null
+
+    private lateinit var notificationManager: ScreenSnapNotificationManager
 
     private fun createOnTouchListener(
         view: View,
@@ -135,7 +139,14 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-        return super.onStartCommand(intent, flags, startId)
+        notificationManager = ScreenSnapNotificationManager(
+            serviceContext = this,
+            screenRecorderServiceClass = FloatingCameraService::class.java,
+        )
+        val notification = notificationManager.createNotification()
+        startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
+
+        return START_STICKY
     }
 
     override fun onDestroy() {

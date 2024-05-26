@@ -1,38 +1,29 @@
 package com.screensnap.core.camera
 
-import android.content.Context
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
-import android.widget.Space
-import android.widget.TextView
 import androidx.camera.core.CameraSelector
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Cameraswitch
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Cameraswitch
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocal
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -41,10 +32,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import kotlin.math.roundToInt
 
 @Composable
 fun CameraPreview(
@@ -62,6 +51,10 @@ fun CameraPreview(
         }
     }
 
+    var offsetX by remember { mutableFloatStateOf(120f) }
+    var offsetY by remember { mutableFloatStateOf(120f) }
+    var isDragging by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.clickable {
         Log.d("Girish", "CameraPreview: onClick")
     }) {
@@ -76,11 +69,11 @@ fun CameraPreview(
                     }
                 },
                 modifier = modifier
-                    .width(120.dp)
-                    .height(120.dp)
+                    .width(offsetX.dp)
+                    .height(offsetY.dp)
             )
 
-            if (shouldDisplayControls) {
+            if (shouldDisplayControls || isDragging) {
                 Icon(
                     imageVector = Icons.Outlined.Cancel,
                     contentDescription = "Close",
@@ -110,6 +103,27 @@ fun CameraPreview(
                     onClick = { /*TODO*/ },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragStart = {
+                                    isDragging = true
+                                },
+                                onDragEnd = {
+                                    isDragging = false
+                                }, onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    val dragAmountX =
+                                        pixelsToDp(dragAmount.x, context.resources.displayMetrics)
+                                    val dragAmountY =
+                                        pixelsToDp(dragAmount.y, context.resources.displayMetrics)
+                                    offsetX += dragAmountX
+                                    offsetY += dragAmountY
+                                    Log.d(
+                                        "Girish",
+                                        "CameraPreview: offest=$offsetX, $offsetY, drag=$dragAmountX, $dragAmountY"
+                                    )
+                                })
+                        }
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.UnfoldMore,
@@ -134,4 +148,8 @@ fun CameraPreviewPreview() {
         onCameraTouchListener = View.OnTouchListener { _, _ -> true },
         onCloseClick = {}, shouldDisplayControls = true,
     )
+}
+
+fun pixelsToDp(pixels: Float, displayMetrics: DisplayMetrics): Float {
+    return pixels / (displayMetrics.densityDpi / 160f)
 }
