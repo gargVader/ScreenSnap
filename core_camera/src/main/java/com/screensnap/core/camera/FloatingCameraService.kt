@@ -8,6 +8,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.camera.core.CameraState
+import androidx.camera.core.impl.CameraStateRegistry
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +35,7 @@ import com.screensnap.core.notification.NotificationState
 import com.screensnap.core.notification.ScreenRecorderPendingIntentProvider
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
+import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,11 +58,14 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
     private lateinit var windowManager: WindowManager
 
     private var shouldShowControls by mutableStateOf(false)
-    private val cameraCoroutineScope = CoroutineScope(Dispatchers.Default)
-    private var cameraJob: Job? = null
+    private val cameraControlsCoroutineScope = CoroutineScope(Dispatchers.Default)
+    private var cameraControlsJob: Job? = null
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     private lateinit var notificationManager: ScreenSnapNotificationManager
     private lateinit var pendingIntentProvider: FloatingCameraPendingIntentProvider
+    private lateinit var screenRecorderPendingIntentProvider: ScreenRecorderPendingIntentProvider
 
     @Inject
     lateinit var repository: NotificationEventRepository
@@ -72,6 +78,8 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
         pendingIntentProvider =
             FloatingCameraPendingIntentProvider(this, FloatingCameraService::class.java)
+        screenRecorderPendingIntentProvider =
+            ScreenRecorderPendingIntentProvider(this, ScreenRecorderService::class.java)
 
         val floatingWindowLayoutParameters = WindowManager.LayoutParams().apply {
             this.height = WindowManager.LayoutParams.WRAP_CONTENT
@@ -99,7 +107,7 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
                         shouldDisplayControls = shouldShowControls,
                         onCameraTouchListener = touchListener,
                         onCloseClick = {
-                            stopSelf()
+                            onClose()
                         })
                 }
 
@@ -167,8 +175,8 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
                     initialTouchX = event.rawX.toDouble()
                     initialTouchY = event.rawY.toDouble()
                     shouldShowControls = true
-                    cameraJob?.cancel()
-                    cameraJob = cameraCoroutineScope.launch {
+                    cameraControlsJob?.cancel()
+                    cameraControlsJob = cameraControlsCoroutineScope.launch {
                         delay(5000)
                         shouldShowControls = false
                     }

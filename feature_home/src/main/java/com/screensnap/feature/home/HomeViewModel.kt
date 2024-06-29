@@ -27,6 +27,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
@@ -54,51 +55,56 @@ constructor(
             loadVideos()
         }
 
-        screenSnapDatastore.getAudioStateFlow().onEach {
-            state = state.copy(audioState = it)
-        }.launchIn(viewModelScope)
+        viewModelScope.launch {
+            screenSnapDatastore.getAudioStateFlow().collect {
+                state = state.copy(audioState = it)
+            }
+        }
 
-        notificationEventRepository.collectEvent().onEach {
-            // Note: This is done so that notification can also control state via the service and
-            // ScreenRecorderEventRepository
-            when (it) {
-                NotificationEvent.RecordingStart -> {
-                    state = state.copy(isRecording = true)
-                    timerJob = runTimer()
-                }
+        viewModelScope.launch {
+            notificationEventRepository.collectEvent().onEach {
+                Log.d("Girish", "HomeViewModel Event Received: ${it.javaClass.simpleName}")
+                // Note: This is done so that notification can also control state via the service and
+                // ScreenRecorderEventRepository
+                when (it) {
+                    NotificationEvent.RecordingStart -> {
+                        state = state.copy(isRecording = true)
+                        timerJob = runTimer()
+                    }
 
-                NotificationEvent.RecordingPaused -> {
-                    state = state.copy(isPaused = true)
-                    timerJob?.cancel()
-                }
+                    NotificationEvent.RecordingPaused -> {
+                        state = state.copy(isPaused = true)
+                        timerJob?.cancel()
+                    }
 
-                NotificationEvent.RecordingResumed -> {
-                    state = state.copy(isPaused = false)
-                    timerJob = runTimer()
-                }
+                    NotificationEvent.RecordingResumed -> {
+                        state = state.copy(isPaused = false)
+                        timerJob = runTimer()
+                    }
 
-                NotificationEvent.RecordingStopAndConversionStart -> {
-                    state = state.copy(
-                        isRecording = false, isPaused = false, isListRefreshing = true
-                    )
-                    timerJob?.cancel()
-                    timer = 0
-                }
+                    NotificationEvent.RecordingStopAndConversionStart -> {
+                        state = state.copy(
+                            isRecording = false, isPaused = false, isListRefreshing = true
+                        )
+                        timerJob?.cancel()
+                        timer = 0
+                    }
 
-                NotificationEvent.ConversionComplete -> {
-                    state = state.copy(isListRefreshing = false)
-                    loadVideos()
-                }
+                    NotificationEvent.ConversionComplete -> {
+                        state = state.copy(isListRefreshing = false)
+                        loadVideos()
+                    }
 
-                NotificationEvent.NotRecording -> {
-                    // Do nothing
-                }
+                    NotificationEvent.NotRecording -> {
+                        // Do nothing
+                    }
 
-                NotificationEvent.Close -> {
-                    state = state.copy(isCameraOn = false)
+                    NotificationEvent.Close -> {
+                        state = state.copy(isCameraOn = false)
+                    }
                 }
             }
-        }.launchIn(viewModelScope)
+        }
     }
 
     private fun runTimer() = viewModelScope.launch {
@@ -212,7 +218,7 @@ constructor(
                     null,
                     sortOrder,
                 )
-            Log.d("Girish", "queryVideos: query=$query")
+//            Log.d("Girish", "queryVideos: query=$query")
 
             query?.use { cursor ->
                 // Cache column indices.
@@ -229,7 +235,7 @@ constructor(
                     val name = cursor.getString(nameColumn)
                     val duration = cursor.getLong(durationColumn)
                     val size = cursor.getLong(sizeColumn)
-                    Log.d("Girish", "queryVideos: id=$id")
+//                    Log.d("Girish", "queryVideos: id=$id")
 
                     val contentUri: Uri =
                         ContentUris.withAppendedId(
@@ -243,7 +249,7 @@ constructor(
                 }
             }
         }
-        Log.d("Girish", "queryVideos: $videoList")
+//        Log.d("Girish", "queryVideos: $videoList")
         return videoList
     }
 }

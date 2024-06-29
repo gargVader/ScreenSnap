@@ -1,6 +1,8 @@
 package com.screensnap.core.notification
 
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,10 +15,15 @@ class NotificationEventRepository @Inject constructor() {
     private val eventStateFlow = MutableStateFlow<NotificationEvent>(NotificationEvent.NotRecording)
 
     fun publishEvent(recorderEvent: NotificationEvent) {
+        Log.d("Girish", "publishEvent: ${recorderEvent.javaClass.simpleName}")
         eventStateFlow.tryEmit(recorderEvent)
     }
 
-    fun collectEvent() = eventStateFlow.asStateFlow()
+    fun collectEvent(): StateFlow<NotificationEvent> = eventStateFlow
+
+    init {
+        Log.d("Girish", "NotificationEventRepository: init")
+    }
 }
 
 sealed class NotificationEvent {

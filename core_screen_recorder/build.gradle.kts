@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":core_datastore"))
     implementation(project(":core_notification"))
     implementation(project(":core_ui"))
-    implementation(project(":core_camera"))
 }
 
 // Allow references to generated code

@@ -116,7 +116,6 @@ fun HomeChips(
                 if (state.isCameraOn) {
                     viewModel.onEvent(HomeScreenEvents.onCloseCamera)
                 } else {
-
                     // Check overlay permission
                     if (!hasOverlayDisplayPermission(context)) {
                         requestOverlayDisplayPermission(context, context as Activity)

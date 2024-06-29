@@ -12,6 +12,7 @@ dependencies {
     // Project
     implementation(project(":core_floating_window"))
     implementation(project(":core_notification"))
+    implementation(project(":core_screen_recorder"))
 }
 
 // Allow references to generated code
