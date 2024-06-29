@@ -105,7 +105,6 @@ class AudioEncoder(
     }
 
     private fun addEndOfStreamFlag() {
-        Log.d(TAG, "addEndOfStreamFlag: ")
         val inputBufferIdx = encoder.dequeueInputBuffer(config.TIMEOUT)
         encoder.queueInputBuffer(
             inputBufferIdx,

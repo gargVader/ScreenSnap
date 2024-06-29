@@ -61,12 +61,11 @@ constructor(
         }
 
         viewModelScope.launch {
-            Log.d("Girish", "Start Collecting Events")
-            // Collect events from FloatingCameraService & ScreenRecorderService
+            // Collect events from FloatingCameraService & ScreenRecorderService. This is done so
+            // that notification can also control state via the service and
+            // ScreenRecorderEventRepository
             notificationEventRepository.getEventFlow().collect {
-                Log.d("Girish", "HomeViewModel Event Received: ${it.javaClass.simpleName}")
-                // Note: This is done so that notification can also control state via the service and
-                // ScreenRecorderEventRepository
+                // Note:
                 when (it) {
                     NotificationEvent.RecordingStart -> {
                         state = state.copy(isRecording = true)

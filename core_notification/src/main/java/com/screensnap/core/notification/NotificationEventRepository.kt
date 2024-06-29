@@ -24,10 +24,6 @@ class NotificationEventRepository @Inject constructor() {
     }
 
     fun getEventFlow(): SharedFlow<NotificationEvent> = eventStateFlow.asSharedFlow()
-
-    init {
-        Log.d("Girish", "NotificationEventRepository: init")
-    }
 }
 
 sealed class NotificationEvent {

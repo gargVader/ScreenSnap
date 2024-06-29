@@ -1,7 +1,6 @@
 package com.screensnap.core.camera
 
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.View
 import androidx.camera.core.CameraSelector
 import androidx.camera.view.LifecycleCameraController
@@ -56,7 +55,6 @@ fun CameraPreview(
     var isDragging by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.clickable {
-        Log.d("Girish", "CameraPreview: onClick")
     }) {
         Box {
             AndroidView(
@@ -118,10 +116,6 @@ fun CameraPreview(
                                         pixelsToDp(dragAmount.y, context.resources.displayMetrics)
                                     offsetX += dragAmountX
                                     offsetY += dragAmountY
-                                    Log.d(
-                                        "Girish",
-                                        "CameraPreview: offest=$offsetX, $offsetY, drag=$dragAmountX, $dragAmountY"
-                                    )
                                 })
                         }
                 ) {
