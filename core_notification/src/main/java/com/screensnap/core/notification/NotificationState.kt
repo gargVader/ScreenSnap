@@ -9,10 +9,14 @@ package com.screensnap.core.notification
 enum class NotificationState {
     NOT_RECORDING,
     RECORDING,
-    RECORDING_PAUSED;
+    RECORDING_PAUSED,
+    ;
 
     companion object {
-        fun fromHomeState(isRecording: Boolean, isPaused: Boolean): NotificationState {
+        fun fromHomeState(
+            isRecording: Boolean,
+            isPaused: Boolean,
+        ): NotificationState {
             return when {
                 isRecording && !isPaused -> RECORDING
                 isRecording && isPaused -> RECORDING_PAUSED

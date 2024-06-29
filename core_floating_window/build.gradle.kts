@@ -9,7 +9,6 @@ android {
 
 dependencies {
     // Project
-
 }
 
 // Allow references to generated code

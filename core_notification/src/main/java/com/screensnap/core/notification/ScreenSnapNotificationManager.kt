@@ -3,12 +3,9 @@ package com.screensnap.core.notification
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service.START_NOT_STICKY
 import android.content.Context
-import android.content.Intent
 import android.view.View
 import android.widget.RemoteViews
-import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICATION_ID
 
 class ScreenSnapNotificationManager(
     private val serviceContext: Context,
@@ -18,7 +15,6 @@ class ScreenSnapNotificationManager(
     private val stopPendingIntent: PendingIntent? = null,
     private val closePendingIntent: PendingIntent? = null,
 ) {
-
     private var notificationManager: NotificationManager =
         serviceContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -66,9 +62,10 @@ class ScreenSnapNotificationManager(
             .build()
     }
 
-    fun notify(notificationId: Int, notificationState: NotificationState) {
+    fun notify(
+        notificationId: Int,
+        notificationState: NotificationState,
+    ) {
         notificationManager.notify(notificationId, createNotification(notificationState))
     }
-
-
 }

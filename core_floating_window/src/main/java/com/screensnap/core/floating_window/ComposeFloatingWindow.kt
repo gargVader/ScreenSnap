@@ -39,25 +39,25 @@ import kotlinx.coroutines.launch
 
 // Taken from https://github.com/only52607/compose-floating-window
 class ComposeFloatingWindow(
-    private val context: Context
+    private val context: Context,
 ) : SavedStateRegistryOwner, ViewModelStoreOwner, HasDefaultViewModelProviderFactory {
-
     override val defaultViewModelProviderFactory: ViewModelProvider.Factory by lazy {
         SavedStateViewModelFactory(
             context.applicationContext as Application,
             this@ComposeFloatingWindow,
-            null
+            null,
         )
     }
 
-    override val defaultViewModelCreationExtras: CreationExtras = MutableCreationExtras().apply {
-        val application = context.applicationContext?.takeIf { it is Application }
-        if (application != null) {
-            set(ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY, application as Application)
+    override val defaultViewModelCreationExtras: CreationExtras =
+        MutableCreationExtras().apply {
+            val application = context.applicationContext?.takeIf { it is Application }
+            if (application != null) {
+                set(ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY, application as Application)
+            }
+            set(SAVED_STATE_REGISTRY_OWNER_KEY, this@ComposeFloatingWindow)
+            set(VIEW_MODEL_STORE_OWNER_KEY, this@ComposeFloatingWindow)
         }
-        set(SAVED_STATE_REGISTRY_OWNER_KEY, this@ComposeFloatingWindow)
-        set(VIEW_MODEL_STORE_OWNER_KEY, this@ComposeFloatingWindow)
-    }
 
     override val viewModelStore: ViewModelStore = ViewModelStore()
 
@@ -71,36 +71,42 @@ class ComposeFloatingWindow(
     private var showing = false
     var decorView: ViewGroup = FrameLayout(context)
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val windowParams: WindowManager.LayoutParams = WindowManager.LayoutParams().apply {
-        height = WindowManager.LayoutParams.WRAP_CONTENT
-        width = WindowManager.LayoutParams.WRAP_CONTENT
-        format = PixelFormat.TRANSLUCENT
-        gravity = Gravity.START or Gravity.TOP
-        windowAnimations = android.R.style.Animation_Dialog
-        flags = (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-        if (context !is Activity) {
-            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            } else {
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+    val windowParams: WindowManager.LayoutParams =
+        WindowManager.LayoutParams().apply {
+            height = WindowManager.LayoutParams.WRAP_CONTENT
+            width = WindowManager.LayoutParams.WRAP_CONTENT
+            format = PixelFormat.TRANSLUCENT
+            gravity = Gravity.START or Gravity.TOP
+            windowAnimations = android.R.style.Animation_Dialog
+            flags = (
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            )
+            if (context !is Activity) {
+                type =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    } else {
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+                    }
             }
         }
-    }
 
     fun setContent(content: @Composable () -> Unit) {
-        setContentView(ComposeView(context).apply {
-            setContent {
-                CompositionLocalProvider(
-                    LocalFloatingWindow provides this@ComposeFloatingWindow
-                ) {
-                    content()
+        setContentView(
+            ComposeView(context).apply {
+                setContent {
+                    CompositionLocalProvider(
+                        LocalFloatingWindow provides this@ComposeFloatingWindow,
+                    ) {
+                        content()
+                    }
                 }
-            }
-            setViewTreeLifecycleOwner(this@ComposeFloatingWindow)
-            setViewTreeViewModelStoreOwner(this@ComposeFloatingWindow)
-            setViewTreeSavedStateRegistryOwner(this@ComposeFloatingWindow)
-        })
+                setViewTreeLifecycleOwner(this@ComposeFloatingWindow)
+                setViewTreeViewModelStoreOwner(this@ComposeFloatingWindow)
+                setViewTreeSavedStateRegistryOwner(this@ComposeFloatingWindow)
+            },
+        )
     }
 
     private fun setContentView(view: View) {
@@ -112,7 +118,7 @@ class ComposeFloatingWindow(
     }
 
     fun show() {
-        if(isAvailable().not()) return
+        if (isAvailable().not()) return
         require(decorView.childCount != 0) {
             "Content view cannot be empty"
         }

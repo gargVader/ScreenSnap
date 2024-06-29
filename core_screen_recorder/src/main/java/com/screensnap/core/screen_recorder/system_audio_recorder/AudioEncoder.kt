@@ -4,7 +4,6 @@ import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import android.util.Log
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -16,7 +15,6 @@ class AudioEncoder(
 ) {
     private var encoder: MediaCodec
     private val bufferInfo = MediaCodec.BufferInfo()
-    private val TAG = "Girish"
 
     @Volatile
     private var isPaused: Boolean = false
@@ -57,10 +55,11 @@ class AudioEncoder(
 
         try {
             while (isActive) {
-                if (!isPaused){
-                    writeToEncoder(onInputBufferAvailable)
-                    readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
-                }
+                if (!isPaused)
+                    {
+                        writeToEncoder(onInputBufferAvailable)
+                        readFromEncoder(onOutputBufferAvailable, onOutputFormatChanged)
+                    }
             }
         } finally {
 //            addEndOfStreamFlag()

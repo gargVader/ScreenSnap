@@ -4,7 +4,6 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
-import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

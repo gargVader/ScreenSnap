@@ -9,7 +9,8 @@ enum class ScreenSnapNotificationAction(val value: String) {
     RECORDING_RESUME(value = createActionName("recording_resume")),
     RECORDING_STOP(value = createActionName("recording_stop")),
     LAUNCH_CAMERA(value = createActionName("launch_camera")),
-    CLOSE(value = createActionName("close"));
+    CLOSE(value = createActionName("close")),
+    ;
 
     companion object {
         fun fromString(value: String) = values().firstOrNull { it.value == value }

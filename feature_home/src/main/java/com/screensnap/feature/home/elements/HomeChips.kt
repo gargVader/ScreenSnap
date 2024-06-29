@@ -125,7 +125,7 @@ fun HomeChips(
                         // Check for camera permission
                         if (ContextCompat.checkSelfPermission(
                                 context,
-                                Manifest.permission.CAMERA
+                                Manifest.permission.CAMERA,
                             ) != PackageManager.PERMISSION_GRANTED
                         ) {
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -142,7 +142,7 @@ fun HomeChips(
                 } else {
                     Icon(Icons.Default.NoPhotography, null)
                 }
-            }
+            },
         )
     }
 }

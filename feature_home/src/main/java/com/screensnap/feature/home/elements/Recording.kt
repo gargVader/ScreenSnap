@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.screensnap.feature.home.Video
 import com.screensnap.feature.home.convertMillisToDisplayDuration
-import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.pow
 
