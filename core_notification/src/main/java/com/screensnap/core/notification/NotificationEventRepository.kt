@@ -19,7 +19,7 @@ class NotificationEventRepository @Inject constructor() {
         eventStateFlow.tryEmit(recorderEvent)
     }
 
-    fun collectEvent(): StateFlow<NotificationEvent> = eventStateFlow
+    fun getEventFlow(): StateFlow<NotificationEvent> = eventStateFlow.asStateFlow()
 
     init {
         Log.d("Girish", "NotificationEventRepository: init")

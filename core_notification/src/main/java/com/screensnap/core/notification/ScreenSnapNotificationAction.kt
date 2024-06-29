@@ -1,5 +1,8 @@
 package com.screensnap.core.notification
 
+/**
+ * We use the same Notification for both recording and camera. So, we need to differentiate the actions
+ */
 enum class ScreenSnapNotificationAction(val value: String) {
     RECORDING_START(value = createActionName("recording_start")),
     RECORDING_PAUSE(value = createActionName("recording_pause")),

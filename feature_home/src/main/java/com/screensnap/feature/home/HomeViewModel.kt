@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -62,7 +61,7 @@ constructor(
         }
 
         viewModelScope.launch {
-            notificationEventRepository.collectEvent().onEach {
+            notificationEventRepository.getEventFlow().collectLatest {
                 Log.d("Girish", "HomeViewModel Event Received: ${it.javaClass.simpleName}")
                 // Note: This is done so that notification can also control state via the service and
                 // ScreenRecorderEventRepository
@@ -154,7 +153,7 @@ constructor(
                 }
             }
 
-            is HomeScreenEvents.onLaunchCamera -> {
+            is HomeScreenEvents.OnLaunchCamera -> {
                 val cameraIntent = Intent(app, FloatingCameraService::class.java).apply {
                     action = ScreenSnapNotificationAction.LAUNCH_CAMERA.value
                     putExtra(
@@ -166,7 +165,7 @@ constructor(
                 state = state.copy(isCameraOn = true)
             }
 
-            is HomeScreenEvents.onCloseCamera -> {
+            is HomeScreenEvents.OnCloseCamera -> {
                 val cameraIntent = Intent(app, FloatingCameraService::class.java)
                 app.stopService(cameraIntent)
                 state = state.copy(isCameraOn = false)

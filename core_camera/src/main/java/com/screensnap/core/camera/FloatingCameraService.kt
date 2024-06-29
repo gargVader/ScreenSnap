@@ -8,8 +8,6 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.camera.core.CameraState
-import androidx.camera.core.impl.CameraStateRegistry
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,14 +26,12 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.screensnap.core.notification.FloatingCameraPendingIntentProvider
 import com.screensnap.core.notification.NotificationEvent
 import com.screensnap.core.notification.NotificationEventRepository
 import com.screensnap.core.notification.NotificationState
-import com.screensnap.core.notification.ScreenRecorderPendingIntentProvider
+import com.screensnap.core.notification.ScreenSnapNotificationAction
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
-import com.screensnap.core.screen_recorder.services.ScreenRecorderService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +61,6 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
     private lateinit var notificationManager: ScreenSnapNotificationManager
     private lateinit var pendingIntentProvider: FloatingCameraPendingIntentProvider
-    private lateinit var screenRecorderPendingIntentProvider: ScreenRecorderPendingIntentProvider
 
     @Inject
     lateinit var repository: NotificationEventRepository
@@ -78,8 +73,6 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
         pendingIntentProvider =
             FloatingCameraPendingIntentProvider(this, FloatingCameraService::class.java)
-        screenRecorderPendingIntentProvider =
-            ScreenRecorderPendingIntentProvider(this, ScreenRecorderService::class.java)
 
         val floatingWindowLayoutParameters = WindowManager.LayoutParams().apply {
             this.height = WindowManager.LayoutParams.WRAP_CONTENT
@@ -122,9 +115,10 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         notificationManager = ScreenSnapNotificationManager(
             serviceContext = this,
+            startPendingIntent = pendingIntentProvider.startPendingIntent,
             closePendingIntent = pendingIntentProvider.closePendingIntent,
         )
-        return notificationManager.handleIntentForFloatingCamera(
+        return handleIntentForFloatingCamera(
             intent = intent,
             onLaunchCamera = { onLaunchCamera(intent) },
             onClose = { onClose() }
@@ -200,8 +194,32 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
         }
     }
 
+    private fun handleIntentForFloatingCamera(
+        intent: Intent,
+        onLaunchCamera: () -> Unit,
+        onClose: () -> Unit
+    ): Int {
+        val action: ScreenSnapNotificationAction =
+            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
+        return when (action) {
+            ScreenSnapNotificationAction.LAUNCH_CAMERA -> {
+                onLaunchCamera()
+                START_NOT_STICKY
+            }
+
+            ScreenSnapNotificationAction.CLOSE -> {
+                onClose()
+                START_NOT_STICKY
+            }
+
+            else -> {
+                START_NOT_STICKY
+            }
+
+        }
+    }
+
     companion object {
         const val KEY_NOTIFICATION_STATE = "notificationState"
-
     }
 }

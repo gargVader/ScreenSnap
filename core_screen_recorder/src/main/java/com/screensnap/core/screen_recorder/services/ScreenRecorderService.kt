@@ -7,12 +7,13 @@ import android.media.projection.MediaProjectionManager
 import android.os.IBinder
 import com.screensnap.core.datastore.ScreenSnapDatastore
 import com.screensnap.core.notification.NotificationState
-import com.screensnap.core.notification.ScreenRecorderPendingIntentProvider
 import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationManager
 import com.screensnap.core.notification.NotificationEvent
 import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.notification.NotificationEventRepository
+import com.screensnap.core.notification.ScreenSnapNotificationAction
+import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICATION_ID
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -64,7 +65,7 @@ class ScreenRecorderService : Service() {
             resumePendingIntent = pendingIntentProvider.resumePendingIntent,
             stopPendingIntent = pendingIntentProvider.stopPendingIntent,
         )
-        return notificationManager.handleIntentForScreenRecorder(
+        return handleIntentForScreenRecorder(
             intent = intent,
             onStartRecording = { onStartRecording(intent) },
             onPauseRecording = { onPauseRecording() },
@@ -139,6 +140,45 @@ class ScreenRecorderService : Service() {
 //            finalFile = finalFile,
             screenSnapDatastore = screenSnapDatastore,
         )
+    }
+
+    private fun handleIntentForScreenRecorder(
+        intent: Intent,
+        onStartRecording: () -> Unit,
+        onPauseRecording: () -> Unit,
+        onResumeRecording: () -> Unit,
+        onStopRecording: () -> Unit,
+    ): Int {
+        val action: ScreenSnapNotificationAction =
+            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
+        return when (action) {
+            ScreenSnapNotificationAction.RECORDING_START -> {
+                onStartRecording()
+                START_NOT_STICKY
+            }
+
+            ScreenSnapNotificationAction.RECORDING_PAUSE -> {
+                notificationManager.notify(NOTIFICATION_ID, NotificationState.RECORDING_PAUSED)
+                onPauseRecording()
+                START_NOT_STICKY
+            }
+
+            ScreenSnapNotificationAction.RECORDING_RESUME -> {
+                notificationManager.notify(NOTIFICATION_ID, NotificationState.RECORDING)
+                onResumeRecording()
+                START_NOT_STICKY
+            }
+
+            ScreenSnapNotificationAction.RECORDING_STOP -> {
+                notificationManager.notify(NOTIFICATION_ID, NotificationState.NOT_RECORDING)
+                onStopRecording()
+                START_NOT_STICKY
+            }
+
+            else -> {
+                START_NOT_STICKY
+            }
+        }
     }
 
     // Stops recording

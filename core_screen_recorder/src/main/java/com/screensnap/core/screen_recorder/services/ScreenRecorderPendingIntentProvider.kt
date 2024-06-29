@@ -1,8 +1,9 @@
-package com.screensnap.core.notification
+package com.screensnap.core.screen_recorder.services
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.screensnap.core.notification.ScreenSnapNotificationAction
 
 class ScreenRecorderPendingIntentProvider(
     private val serviceContext: Context,

@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,9 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.screensnap.core.camera.FloatingCameraService
-import com.screensnap.core.camera.hasOverlayDisplayPermission
-import com.screensnap.core.camera.requestOverlayDisplayPermission
 import com.screensnap.core.datastore.AudioState
 import com.screensnap.feature.home.elements.HomeChips
 import com.screensnap.feature.home.elements.RecordFab
@@ -75,7 +70,7 @@ internal fun HomeScreen(
     val cameraPermissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
+                viewModel.onEvent(HomeScreenEvents.OnLaunchCamera)
             } else {
                 Toast.makeText(context, "Access to camera denied", LENGTH_SHORT).show()
             }

@@ -22,6 +22,6 @@ sealed interface HomeScreenEvents {
     data class OnUpdateAudioState(val audioState: com.screensnap.core.datastore.AudioState) :
         HomeScreenEvents
 
-    object onLaunchCamera: HomeScreenEvents
-    object onCloseCamera: HomeScreenEvents
+    object OnLaunchCamera: HomeScreenEvents
+    object OnCloseCamera: HomeScreenEvents
 }

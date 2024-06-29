@@ -66,76 +66,9 @@ class ScreenSnapNotificationManager(
             .build()
     }
 
-    fun handleIntentForScreenRecorder(
-        intent: Intent,
-        onStartRecording: () -> Unit,
-        onPauseRecording: () -> Unit,
-        onResumeRecording: () -> Unit,
-        onStopRecording: () -> Unit,
-    ): Int {
-        val action: ScreenSnapNotificationAction =
-            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
-        return when (action) {
-            ScreenSnapNotificationAction.RECORDING_START -> {
-                onStartRecording()
-                START_NOT_STICKY
-            }
-
-            ScreenSnapNotificationAction.RECORDING_PAUSE -> {
-                notificationManager.notify(
-                    NOTIFICATION_ID,
-                    createNotification(NotificationState.RECORDING_PAUSED)
-                )
-                onPauseRecording()
-                START_NOT_STICKY
-            }
-
-            ScreenSnapNotificationAction.RECORDING_RESUME -> {
-                notificationManager.notify(
-                    NOTIFICATION_ID,
-                    createNotification(NotificationState.RECORDING)
-                )
-                onResumeRecording()
-                START_NOT_STICKY
-            }
-
-            ScreenSnapNotificationAction.RECORDING_STOP -> {
-                notificationManager.notify(
-                    NOTIFICATION_ID,
-                    createNotification(NotificationState.NOT_RECORDING)
-                )
-                onStopRecording()
-                START_NOT_STICKY
-            }
-
-            else -> {
-                START_NOT_STICKY
-            }
-        }
+    fun notify(notificationId: Int, notificationState: NotificationState) {
+        notificationManager.notify(notificationId, createNotification(notificationState))
     }
 
-    fun handleIntentForFloatingCamera(
-        intent: Intent,
-        onLaunchCamera: () -> Unit,
-        onClose: () -> Unit
-    ): Int {
-        val action: ScreenSnapNotificationAction =
-            ScreenSnapNotificationAction.fromString(intent.action ?: "") ?: return START_NOT_STICKY
-        return when (action) {
-            ScreenSnapNotificationAction.LAUNCH_CAMERA -> {
-                onLaunchCamera()
-                START_NOT_STICKY
-            }
 
-            ScreenSnapNotificationAction.CLOSE -> {
-                onClose()
-                START_NOT_STICKY
-            }
-
-            else -> {
-                START_NOT_STICKY
-            }
-
-        }
-    }
 }

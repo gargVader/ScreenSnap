@@ -35,6 +35,7 @@ fun HomeChips(
     val context = LocalContext.current
     val state = viewModel.state
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Audio Chip
         FilterChip(
             selected = state.audioState != com.screensnap.core.datastore.AudioState.Mute,
             onClick = {
@@ -110,11 +111,12 @@ fun HomeChips(
                 }
             },
         )
+        // Camera Chip
         FilterChip(
             selected = state.isCameraOn,
             onClick = {
                 if (state.isCameraOn) {
-                    viewModel.onEvent(HomeScreenEvents.onCloseCamera)
+                    viewModel.onEvent(HomeScreenEvents.OnCloseCamera)
                 } else {
                     // Check overlay permission
                     if (!hasOverlayDisplayPermission(context)) {
@@ -128,7 +130,7 @@ fun HomeChips(
                         ) {
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         } else {
-                            viewModel.onEvent(HomeScreenEvents.onLaunchCamera)
+                            viewModel.onEvent(HomeScreenEvents.OnLaunchCamera)
                         }
                     }
                 }
