@@ -6,14 +6,14 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
 import com.screensnap.core.datastore.ScreenSnapDatastore
-import com.screensnap.core.notification.NotificationState
-import com.screensnap.core.notification.ScreenSnapNotificationConstants
-import com.screensnap.core.notification.ScreenSnapNotificationManager
 import com.screensnap.core.notification.NotificationEvent
-import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.notification.NotificationEventRepository
+import com.screensnap.core.notification.NotificationState
 import com.screensnap.core.notification.ScreenSnapNotificationAction
+import com.screensnap.core.notification.ScreenSnapNotificationConstants
 import com.screensnap.core.notification.ScreenSnapNotificationConstants.NOTIFICATION_ID
+import com.screensnap.core.notification.ScreenSnapNotificationManager
+import com.screensnap.core.screen_recorder.ScreenRecorder
 import com.screensnap.core.screen_recorder.utils.RecorderConfigValues
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -78,7 +78,7 @@ class ScreenRecorderService : Service() {
         // Start notification for service
         val notification =
             notificationManager.createNotification(notificationState = NotificationState.RECORDING)
-        startForeground(ScreenSnapNotificationConstants.NOTIFICATION_ID, notification)
+        startForeground(NOTIFICATION_ID, notification)
 
         // Extract info
         val config = ScreenRecorderServiceConfig.createFromScreenRecorderServiceIntent(intent)

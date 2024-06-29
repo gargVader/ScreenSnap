@@ -121,6 +121,7 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
         return handleIntentForFloatingCamera(
             intent = intent,
             onLaunchCamera = { onLaunchCamera(intent) },
+            onStartRecording = {  },
             onClose = { onClose() }
         )
     }
@@ -196,6 +197,7 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
 
     private fun handleIntentForFloatingCamera(
         intent: Intent,
+        onStartRecording: () -> Unit,
         onLaunchCamera: () -> Unit,
         onClose: () -> Unit
     ): Int {
@@ -204,6 +206,11 @@ class FloatingCameraService : Service(), SavedStateRegistryOwner, ViewModelStore
         return when (action) {
             ScreenSnapNotificationAction.LAUNCH_CAMERA -> {
                 onLaunchCamera()
+                START_NOT_STICKY
+            }
+
+            ScreenSnapNotificationAction.RECORDING_START -> {
+                onStartRecording()
                 START_NOT_STICKY
             }
 
