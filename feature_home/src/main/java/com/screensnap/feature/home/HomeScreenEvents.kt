@@ -1,6 +1,7 @@
 package com.screensnap.feature.home
 
 import android.content.Intent
+import android.net.Uri
 
 sealed interface HomeScreenEvents {
     /**

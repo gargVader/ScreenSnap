@@ -76,24 +76,24 @@ fun ChipSection(
 fun DetailsSection(audioState: AudioState) {
     when (audioState) {
         is AudioState.MicOnly -> {
-            Text(text = "App sound is recorded\nVoice is recorded")
+            Text(text = "System sound is recorded ✅\nYour voice is recorded ✅")
         }
 
         is AudioState.SystemOnly -> {
-            Text(text = "App sound is recorded\nVoice is not recorded")
+            Text(text = "System sound is recorded ✅\nYour Voice is not recorded ❌")
         }
 
         is AudioState.MicAndSystem -> {
             Text(
                 text =
-                    "App sound is recorded\n" +
-                        "Voice is is recorded\n\n" +
+                    "System sound is recorded ✅\n" +
+                        "Your voice is recorded ✅\n\n" +
                         "Use this over Mic, for better system sound",
             )
         }
 
         is AudioState.Mute -> {
-            Text(text = "App sound is not recorded\nVoice is not recorded")
+            Text(text = "System sound is not recorded ❌\nYour voice is not recorded ❌")
         }
     }
 }

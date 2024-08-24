@@ -59,15 +59,16 @@ fun SettingsScreen(
                 onClick = { onAudioSettingsClick(state.audioState) },
             )
 
-            SettingsRowVertical(
-                icon = Icons.Default.FolderOpen,
-                title = "Save Location",
-                currentSetting =
-                    state.saveLocation
-                        ?: stringResource(R.string.save_location_error_loading),
-            ) {
-                directoryPickerLauncher.launch(state.saveLocation?.toUri())
-            }
+//            Custom destination settings doesn't work
+//            SettingsRowVertical(
+//                icon = Icons.Default.FolderOpen,
+//                title = "Save Location",
+//                currentSetting =
+//                    state.saveLocation
+//                        ?: stringResource(R.string.save_location_error_loading),
+//            ) {
+//                directoryPickerLauncher.launch(state.saveLocation?.toUri())
+//            }
         }
     }
 }

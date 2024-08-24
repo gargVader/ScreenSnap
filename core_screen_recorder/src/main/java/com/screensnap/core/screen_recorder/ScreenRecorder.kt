@@ -71,6 +71,16 @@ class ScreenRecorder(
         systemAudioRecorder.resumeRecording()
     }
 
+    private suspend fun createFinalFile(): File {
+        val fileName = createFileName()
+        val directoryString = screenSnapDatastore.getLocationPath()
+        // Make sure directory exists
+        val directoryFile = File(directoryString)
+        if (!directoryFile.exists()) directoryFile.mkdirs()
+        val finalFile = File(directoryFile, fileName)
+        return finalFile
+    }
+
     suspend fun stopRecording() {
         mediaRecorder.stop()
         mediaRecorder.release()
@@ -80,12 +90,7 @@ class ScreenRecorder(
 
         coroutineScope {
             launch {
-                val fileName = "ScreenSnap${System.currentTimeMillis()}.mp4"
-                val directoryString = screenSnapDatastore.getLocationPath()
-                // Make sure directory exists
-                val directoryFile = File(directoryString)
-                if (!directoryFile.exists()) directoryFile.mkdirs()
-                val finalFile = File(directoryFile, fileName)
+                val finalFile = createFinalFile()
                 delay(1000)
                 when (audioState) {
                     is AudioState.Mute, AudioState.MicOnly -> {
