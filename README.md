@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="screenshots/1.jpeg" width="250px">
-  <img src="screenshots/2.jpeg" width="250px">
-  <img src="screenshots/3.jpeg" width="250px">
+  <img src="screenshots/ScreenSnap1.png" width="250px">
+  <img src="screenshots/ScreenSnap2.png" width="250px">
+  <img src="screenshots/ScreenSnap3.png" width="250px">
 </p>
 
-### Currently working on:
-- Camera Feature
