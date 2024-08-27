@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="screenshots/ScreenSnap1.png" width="250px">
-  <img src="screenshots/ScreenSnap2.png" width="250px">
-  <img src="screenshots/ScreenSnap3.png" width="250px">
+  <img src="screenshots/1.png" width="250px">
+  <img src="screenshots/2.png" width="250px">
+  <img src="screenshots/3.png" width="250px">
+  <img src="screenshots/4.png" width="250px">
+  <img src="screenshots/5.png" width="250px">
 </p>
 
